@@ -1,0 +1,39 @@
+{
+  "name": "@redotech/redo-hydrogen",
+  "version": "1.0.0",
+  "description": "Utilities to enable and disable Redo coverage on Hydrogen stores",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "rollup -c --watch --bundleConfigAsCjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/broskisworld/redo-hydrogen.git"
+  },
+  "author": "Redo Tech",
+  "bugs": {
+    "url": "https://github.com/broskisworld/redo-hydrogen/issues"
+  },
+  "private": "true",
+  "peerDependencies": {
+    "@remix-run/react": "^2.15.2",
+    "@shopify/hydrogen": "^2024.10.1",
+    "@shopify/hydrogen-react": "^2024.10.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/react": "^19.0.8",
+    "nodemon": "^3.1.9",
+    "react": "^18.3.1",
+    "rollup": "^4.32.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.3"
+  }
+}
