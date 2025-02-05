@@ -26,6 +26,7 @@ type CartInfoToEnable = {
 type RedoContextValue = {
   enabled: boolean,
   loading: boolean,
+  storeId?: string,
   // cartProduct?: CartProductVariantFragment,
   // cartAttribute?: CartAttributeArgs
   cartInfoToEnable?: CartInfoToEnable,

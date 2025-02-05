@@ -7,7 +7,7 @@ import { addProductToCartIfNeeded, removeProductFromCartIfNeeded, setCartRedoEna
 
 const DEFAULT_REDO_CONTEXT_VALUE: RedoContextValue = {
   enabled: false,
-  loading: true
+  loading: true,
 }
 
 const RedoContext = createContext(DEFAULT_REDO_CONTEXT_VALUE);
@@ -88,8 +88,9 @@ const RedoProvider = ({
   const contextVal: RedoContextValue = {
     enabled: true,
     loading,
+    storeId,
     cartInfoToEnable,
-    cart
+    cart,
   };
 
   return (
