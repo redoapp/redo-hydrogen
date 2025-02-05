@@ -73,15 +73,15 @@ const RedoProvider = ({
 
       setLoading(false);
   
-      if(!json.cartInfoToEnable) {
+      if(!json?.coverageProducts?.[0]?.cartInfoToEnable) {
         return false;
       }
 
-      console.log(`Retrieved cart info: ${JSON.stringify(json.cartInfoToEnable)}`)
+      console.log(`Retrieved cart info: ${JSON.stringify(json.coverageProducts[0].cartInfoToEnable)}`)
   
       // setCartProduct(json.cartInfoToEnable.selectedVariant);
       // setCartAttribute(json.cartInfoToEnable.cartAttribute);
-      setCartInfoToEnable(json.cartInfoToEnable);
+      setCartInfoToEnable(json.coverageProducts[0].cartInfoToEnable);
     })
   }, [cart]);
   
