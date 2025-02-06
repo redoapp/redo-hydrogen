@@ -59,10 +59,11 @@ const applyButtonVariables = ({
   cart: CartReturn,
   ui: CheckoutButtonUIResponse
 }): CheckoutButtonUIResponse | null => {
+  const cartContainsRedo = !!(cart.lines.nodes.some((cartItem) => cartItem.merchandise?.product?.vendor === 're:do'));
   const combinedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: cart.cost.totalAmount.currencyCode
-  }).format(Number(cart.cost.totalAmount.amount) + redoCoverageClient.price);
+  }).format(Number(cart.cost.totalAmount.amount) + (cartContainsRedo ? 0 : redoCoverageClient.price));
 
   if(!combinedPrice || !combinedPrice.length || combinedPrice.includes('NaN')) {
     return null;
@@ -108,7 +109,9 @@ const RedoCheckoutButtons = (props: {
   useEffect(() => {
     (async () => {
       const buttons = await getButtonsToShow({ redoCoverageClient, cart, storeId: props.storeId });
-      setCheckoutButtonsUI(buttons);
+      if(buttons) {
+        setCheckoutButtonsUI(buttons);
+      }
     })();
   }, [cart, redoCoverageClient.price]);
 
