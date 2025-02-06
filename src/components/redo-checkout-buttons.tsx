@@ -7,7 +7,7 @@ import {
 } from "@shopify/hydrogen";
 import { useRedoCoverageClient } from "../providers/redo-coverage-client";
 import { CartInfoToEnable, RedoCoverageClient } from "../types";
-import { REDO_PUBLIC_API_HOSTNAME_LOCAL } from "../utils/security";
+import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
 
 type CheckoutButtonUIResponse = {
   html: string;
@@ -25,7 +25,7 @@ const getButtonsToShow = ({
 }): Promise<CheckoutButtonUIResponse | null> => {
   return new Promise<CheckoutButtonUIResponse | null>((resolve, reject) => {
     fetch(
-      `http://${REDO_PUBLIC_API_HOSTNAME_LOCAL}/v2.2/stores/${storeId}/checkout-buttons-ui`,
+      `http://${REDO_PUBLIC_API_HOSTNAME}/v2.2/stores/${storeId}/checkout-buttons-ui`,
       {
         method: "GET",
         headers: {
