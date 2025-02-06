@@ -2,7 +2,7 @@ import { useFetcher } from "@remix-run/react";
 import { CartReturn } from "@shopify/hydrogen";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient } from "../types";
-import { REDO_PUBLIC_API_HOSTNAME_LOCAL } from "../utils/security";
+import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
 import { addProductToCartIfNeeded, removeProductFromCartIfNeeded, setCartRedoEnabledAttribute, useFetcherWithPromise } from "../utils/cart";
 
 const DEFAULT_REDO_CONTEXT_VALUE: RedoContextValue = {
@@ -27,7 +27,7 @@ const RedoProvider = ({
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch(`http://${REDO_PUBLIC_API_HOSTNAME_LOCAL}/v2.2/stores/${storeId}/coverage-products`, {
+    fetch(`http://${REDO_PUBLIC_API_HOSTNAME}/v2.2/stores/${storeId}/coverage-products`, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
