@@ -25,7 +25,7 @@ const getButtonsToShow = ({
 }): Promise<CheckoutButtonUIResponse | null> => {
   return new Promise<CheckoutButtonUIResponse | null>((resolve, reject) => {
     fetch(
-      `http://${REDO_PUBLIC_API_HOSTNAME}/v2.2/stores/${storeId}/checkout-buttons-ui`,
+      `https://${REDO_PUBLIC_API_HOSTNAME}/v2.2/stores/${storeId}/checkout-buttons-ui`,
       {
         method: "GET",
         headers: {

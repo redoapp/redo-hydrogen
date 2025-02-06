@@ -1,7 +1,7 @@
 const REDO_PUBLIC_API_HOSTNAME = 'api.getredo.com';
 
 const REDO_REQUIRED_HOSTNAMES = [
-  REDO_PUBLIC_API_HOSTNAME,
+  REDO_PUBLIC_API_HOSTNAME
 ];
 
 export {
