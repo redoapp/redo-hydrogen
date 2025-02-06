@@ -6,8 +6,9 @@ import {
   Storefront,
 } from "@shopify/hydrogen";
 import { useRedoCoverageClient } from "../providers/redo-coverage-client";
-import { CartInfoToEnable } from "../types";
+import { CartInfoToEnable, RedoCoverageClient } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME_LOCAL } from "../utils/security";
+import { useMoney } from '@shopify/hydrogen-react';
 
 type CheckoutButtonUIResponse = {
   html: string;
@@ -15,8 +16,12 @@ type CheckoutButtonUIResponse = {
 };
 
 const getButtonsToShow = ({
-  storeId,
+  redoCoverageClient,
+  cart,
+  storeId
 }: {
+  redoCoverageClient: RedoCoverageClient,
+  cart: CartReturn,
   storeId: string;
 }): Promise<CheckoutButtonUIResponse | null> => {
   return new Promise<CheckoutButtonUIResponse | null>((resolve, reject) => {
@@ -39,16 +44,41 @@ const getButtonsToShow = ({
         `Retrieved checkout buttons info: ${JSON.stringify(json.html)}`
       );
 
-      return resolve(json);
+      const ui = applyButtonVariables({
+        redoCoverageClient,
+        cart,
+        ui: json
+      });
+
+      return resolve(ui);
     });
   });
 };
 
-// const applyButtonVariables = ({
-//   redoCoverageClient
-// }: {
-//   redoCoverageClient
-// })
+const applyButtonVariables = ({
+  redoCoverageClient,
+  cart,
+  ui
+}: {
+  redoCoverageClient: RedoCoverageClient,
+  cart: CartReturn,
+  ui: CheckoutButtonUIResponse
+}): CheckoutButtonUIResponse | null => {
+  const combinedPrice = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: cart.cost.totalAmount.currencyCode
+  }).format(Number(cart.cost.totalAmount.amount) + redoCoverageClient.price);
+
+  if(!combinedPrice || !combinedPrice.length || combinedPrice.includes('NaN')) {
+    return null;
+  }
+
+  console.log(`Attempting replace! combinedPrice is ${combinedPrice}, currency is ${cart.cost.totalAmount.currencyCode}, html is length ${ui.html.length}.`);
+
+  ui.html = ui.html.replaceAll('%combinedPrice%', combinedPrice);
+
+  return ui;
+}
 
 const findAncestor = (
   searchEl: HTMLElement | null,
@@ -86,13 +116,10 @@ const RedoCheckoutButtons = (props: {
 
   useEffect(() => {
     (async () => {
-      console.log("a");
-      const buttons = await getButtonsToShow({ storeId: props.storeId });
-      console.log("b");
+      const buttons = await getButtonsToShow({ redoCoverageClient, cart, storeId: props.storeId });
       setCheckoutButtonsUI(buttons);
-      console.log("c");
     })();
-  }, [cart, redoCoverageClient]);
+  }, [cart, redoCoverageClient.price]);
 
   const wrapperClickHandler = async (e: MouseEvent) => {
     let clickedElement = e.target as HTMLElement;
