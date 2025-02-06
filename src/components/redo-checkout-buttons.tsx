@@ -94,9 +94,6 @@ const RedoCheckoutButtons = (props: {
   children?: ReactNode;
   onClick?: (enabled: boolean) => void;
 }) => {
-  // const history = useHistory();
-  // const navigate = useNavigate();
-  // let cart = getCartProducts();
   const redoCoverageClient = useRedoCoverageClient();
   let cart = props.cart;
   let checkoutUrl = cart.checkoutUrl;
