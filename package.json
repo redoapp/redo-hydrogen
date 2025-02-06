@@ -10,11 +10,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/broskisworld/redo-hydrogen.git"
+    "url": "git+https://github.com/redoapp/redo-hydrogen.git"
   },
-  "author": "Redo Tech",
+  "author": "Redo Tech <eng-hydrogen@getredo.com> (https://getredo.com)",
   "bugs": {
-    "url": "https://github.com/broskisworld/redo-hydrogen/issues"
+    "url": "https://github.com/redoapp/redo-hydrogen/issues"
   },
   "private": "true",
   "peerDependencies": {
@@ -35,5 +35,10 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "tslib": "^2.8.1",
     "typescript": "^5.7.3"
-  }
+  },
+  "keywords": [
+    "Hydrogen"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/redoapp/redo-hydrogen#readme"
 }
