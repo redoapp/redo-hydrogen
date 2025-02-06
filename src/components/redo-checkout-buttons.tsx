@@ -40,10 +40,6 @@ const getButtonsToShow = ({
         return resolve(null);
       }
 
-      console.log(
-        `Retrieved checkout buttons info: ${JSON.stringify(json.html)}`
-      );
-
       const ui = applyButtonVariables({
         redoCoverageClient,
         cart,
@@ -72,8 +68,6 @@ const applyButtonVariables = ({
   if(!combinedPrice || !combinedPrice.length || combinedPrice.includes('NaN')) {
     return null;
   }
-
-  console.log(`Attempting replace! combinedPrice is ${combinedPrice}, currency is ${cart.cost.totalAmount.currencyCode}, html is length ${ui.html.length}.`);
 
   ui.html = ui.html.replaceAll('%combinedPrice%', combinedPrice);
 
@@ -112,8 +106,6 @@ const RedoCheckoutButtons = (props: {
     null
   );
 
-  console.log("storefront", props.storefront);
-
   useEffect(() => {
     (async () => {
       const buttons = await getButtonsToShow({ redoCoverageClient, cart, storeId: props.storeId });
@@ -134,8 +126,6 @@ const RedoCheckoutButtons = (props: {
         (el) => el.dataset?.target == "coverage-button"
       )
     ) {
-      console.log("Coverage enabled");
-
       const attachResult = await redoCoverageClient.enable();
       if (props.onClick) {
         await props.onClick(attachResult);
@@ -147,7 +137,6 @@ const RedoCheckoutButtons = (props: {
         (el) => el.dataset.target == "non-coverage-button"
       )
     ) {
-      console.log("Coverage disabled");
       await redoCoverageClient.disable();
       if (props.onClick) {
         await props.onClick(false);

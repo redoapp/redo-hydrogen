@@ -27,15 +27,12 @@ const addProductToCartIfNeeded = async ({
     return cartLine.merchandise.id === `gid://shopify/ProductVariant/${cartInfoToEnable.variantId}`;
   });
   if(redoProductsInCart.length === 0) {
-    console.log('add product');
     return await addProductToCart({ fetcher, cartInfoToEnable });
   } else if (redoProductsInCart.length === 1 && correctRedoProductInCart.length === 1 && correctRedoProductInCart[0].quantity === 1) {
     // No action needed
-    console.log('quantity ok');
     return;
   } else {
     let isSuccess = true;
-    console.log('remove then add product');
 
     await removeLinesFromCart({ fetcher, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
     await addProductToCart({ fetcher, cartInfoToEnable });
@@ -64,8 +61,6 @@ const removeLinesFromCart = async ({
     },
     {method: 'POST', action: '/cart'},
   );
-
-  console.log('Removed product lines');
 };
 
 const removeProductFromCartIfNeeded = async ({
@@ -87,10 +82,8 @@ const removeProductFromCartIfNeeded = async ({
   });
 
   if(redoProductsInCart.length !== 0) {
-    console.log('Need to remove Redo products')
     await removeLinesFromCart({ fetcher, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
   } else {
-    console.log('No redo products');
   }
 };
 
@@ -101,8 +94,6 @@ const addProductToCart = async ({
   fetcher: FetcherWithComponents<unknown>,
   cartInfoToEnable: CartInfoToEnable
 }) => {
-  console.log(JSON.stringify(cartInfoToEnable.selectedVariant, null, 2));
-
   const redoProductLine = {
     "merchandiseId": `gid://shopify/ProductVariant/${cartInfoToEnable.variantId}`,
     "quantity": 1,
@@ -124,8 +115,6 @@ const addProductToCart = async ({
     },
     {method: 'POST', action: '/cart'},
   );
-
-  console.log('Added product!');
 };
 
 const setCartRedoEnabledAttribute = async ({
@@ -137,11 +126,6 @@ const setCartRedoEnabledAttribute = async ({
   cartInfoToEnable: CartInfoToEnable | null,
   enabled: boolean
 }) => {
-  console.log(`attribute is ${JSON.stringify({
-    key: cartInfoToEnable?.cartAttribute || DEFAULT_REDO_ENABLED_CART_ATTRIBUTE,
-    value: enabled.toString()
-  }, null, 2)}`);
-
   const formInput = {
     action: CartForm.ACTIONS.AttributesUpdateInput,
     inputs: {

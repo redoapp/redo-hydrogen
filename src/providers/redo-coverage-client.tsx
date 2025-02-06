@@ -27,7 +27,6 @@ const RedoProvider = ({
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    setLoading(true);
     fetch(`http://${REDO_PUBLIC_API_HOSTNAME_LOCAL}/v2.2/stores/${storeId}/coverage-products`, {
       method: 'POST',
       headers: {
@@ -36,11 +35,6 @@ const RedoProvider = ({
       body: JSON.stringify({
         cart: {
           lineItems: cart.lines.nodes.map((cartLine) => ({
-            // coupons: [{
-            //   code: '',
-            //   discountAmount: '',
-            //   id: ''
-            // }],
             id: cartLine.id,
             originalPrice: {
               amount: cartLine.merchandise?.price?.amount,
@@ -64,7 +58,8 @@ const RedoProvider = ({
           },
         },
         customer: {
-          id: cart.buyerIdentity?.customer?.id || ''
+          id: cart.buyerIdentity?.customer?.id || '',
+          country: cart.buyerIdentity?.countryCode
         }
       })
     })
@@ -72,13 +67,6 @@ const RedoProvider = ({
       let json = await res.json();
 
       setLoading(false);
-  
-      // if(!json?.coverageProducts?.[0]?.cartInfoToEnable) {
-      //   console.log('No cart info received')
-      //   return false;
-      // }
-
-      console.log(`Retrieved cart info: ${JSON.stringify(json.coverageProducts[0].cartInfoToEnable)}`)
   
       setCartInfoToEnable(json.cartInfoToEnable);
       // setCartInfoToEnable(json.coverageProducts[0].cartInfoToEnable);
@@ -103,13 +91,21 @@ const RedoProvider = ({
 const useRedoCoverageClient = (): RedoCoverageClient => {
   const redoContext = useContext(RedoContext);
   const fetcher = useFetcherWithPromise();
+
+  useEffect(() => {
+    if(redoContext.loading || !redoContext.cartInfoToEnable) {
+      return;
+    }
+    removeProductFromCartIfNeeded({
+      fetcher,
+      cart: redoContext.cart,
+      cartInfoToEnable: redoContext.cartInfoToEnable
+    });
+  }, [redoContext.loading])
   
   return {
     enable: async () => {
-      console.log('Enabling...')
       if(redoContext.loading || !redoContext.cartInfoToEnable) {
-        console.log('Cancelling')
-        console.log({loading: redoContext.loading, cartInfoToEnable: redoContext.cartInfoToEnable})
         return false;
       }
       let addProductResult = await addProductToCartIfNeeded({
@@ -132,7 +128,7 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
         fetcher,
         cart: redoContext.cart,
         cartInfoToEnable: redoContext.cartInfoToEnable
-      })
+      });
       await setCartRedoEnabledAttribute({
         fetcher,
         cartInfoToEnable: redoContext.cartInfoToEnable,
@@ -144,7 +140,6 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       return redoContext.enabled;
     },
     get price() {
-      // TODO: currency
       return Number(redoContext.cartInfoToEnable?.selectedVariant.price.amount);
     },
     get cartProduct() {
