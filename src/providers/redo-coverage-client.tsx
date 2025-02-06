@@ -67,9 +67,8 @@ const RedoProvider = ({
       let json = await res.json();
 
       setLoading(false);
-  
-      setCartInfoToEnable(json.cartInfoToEnable);
-      // setCartInfoToEnable(json.coverageProducts[0].cartInfoToEnable);
+      
+      setCartInfoToEnable(json.coverageProducts[0].cartInfoToEnable);
     })
   }, [cart]);
   
@@ -135,6 +134,9 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
         enabled: false
       });
       return true;
+    },
+    get loading() {
+      return redoContext.loading;
     },
     get enabled() {
       return redoContext.enabled;

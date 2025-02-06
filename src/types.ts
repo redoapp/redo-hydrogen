@@ -10,6 +10,7 @@ type CartAttributeKey = string;
 interface RedoCoverageClient {
   enable(): Promise<boolean>;
   disable(): Promise<boolean>;
+  get loading(): boolean;
   get enabled(): boolean;
   get price(): number;
   get cartProduct(): CartProductVariantFragment | undefined
