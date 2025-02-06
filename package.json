@@ -16,7 +16,6 @@
   "bugs": {
     "url": "https://github.com/redoapp/redo-hydrogen/issues"
   },
-  "private": "true",
   "peerDependencies": {
     "@remix-run/react": "^2.15.2",
     "@shopify/hydrogen": "^2024.10.1",
