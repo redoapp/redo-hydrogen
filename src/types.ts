@@ -27,17 +27,9 @@ type RedoContextValue = {
   enabled: boolean,
   loading: boolean,
   storeId?: string,
-  // cartProduct?: CartProductVariantFragment,
-  // cartAttribute?: CartAttributeArgs
   cartInfoToEnable?: CartInfoToEnable,
   cart?: CartReturn
 };
-
-interface LoadState<T> {
-  data: T;
-  pending: boolean;
-  error: any;
-}
 
 export type {
   CartAttributeKey,
