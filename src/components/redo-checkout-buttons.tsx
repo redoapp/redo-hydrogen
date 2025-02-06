@@ -8,7 +8,6 @@ import {
 import { useRedoCoverageClient } from "../providers/redo-coverage-client";
 import { CartInfoToEnable, RedoCoverageClient } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME_LOCAL } from "../utils/security";
-import { useMoney } from '@shopify/hydrogen-react';
 
 type CheckoutButtonUIResponse = {
   html: string;
