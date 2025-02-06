@@ -4,6 +4,7 @@ import { createContext, ReactNode, useContext, useEffect, useState } from "react
 import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME_LOCAL } from "../utils/security";
 import { addProductToCartIfNeeded, removeProductFromCartIfNeeded, setCartRedoEnabledAttribute, useFetcherWithPromise } from "../utils/cart";
+import { LoadState, useLoad } from "../utils/react-utils";
 
 const DEFAULT_REDO_CONTEXT_VALUE: RedoContextValue = {
   enabled: false,
@@ -88,67 +89,69 @@ const RedoProvider = ({
   );
 };
 
-const useRedoCoverageClient = (): RedoCoverageClient => {
+const useRedoCoverageClient = (): LoadState<RedoCoverageClient> => {
   const redoContext = useContext(RedoContext);
   const fetcher = useFetcherWithPromise();
 
-  useEffect(() => {
-    if(redoContext.loading || !redoContext.cartInfoToEnable) {
-      return;
-    }
-    removeProductFromCartIfNeeded({
-      fetcher,
-      cart: redoContext.cart,
-      cartInfoToEnable: redoContext.cartInfoToEnable
-    });
-  }, [redoContext.loading])
-  
-  return {
-    enable: async () => {
+  return useLoad<RedoCoverageClient>(() => {
+    useEffect(() => {
       if(redoContext.loading || !redoContext.cartInfoToEnable) {
-        return false;
+        return;
       }
-      let addProductResult = await addProductToCartIfNeeded({
-        fetcher,
-        cart: redoContext.cart,
-        cartInfoToEnable: redoContext.cartInfoToEnable,
-      });
-      await setCartRedoEnabledAttribute({
-        fetcher,
-        cartInfoToEnable: redoContext.cartInfoToEnable,
-        enabled: true
-      });
-      return true;
-    },
-    disable: async () => {
-      if(!redoContext.cartInfoToEnable) {
-        return false;
-      }
-      await removeProductFromCartIfNeeded({
+      removeProductFromCartIfNeeded({
         fetcher,
         cart: redoContext.cart,
         cartInfoToEnable: redoContext.cartInfoToEnable
       });
-      await setCartRedoEnabledAttribute({
-        fetcher,
-        cartInfoToEnable: redoContext.cartInfoToEnable,
-        enabled: false
-      });
-      return true;
-    },
-    get enabled() {
-      return redoContext.enabled;
-    },
-    get price() {
-      return Number(redoContext.cartInfoToEnable?.selectedVariant.price.amount);
-    },
-    get cartProduct() {
-      return redoContext.cartInfoToEnable?.selectedVariant;
-    },
-    get cartAttribute() {
-      return redoContext.cartInfoToEnable?.cartAttribute
+    }, [redoContext.loading])
+    
+    return {
+      enable: async () => {
+        if(redoContext.loading || !redoContext.cartInfoToEnable) {
+          return false;
+        }
+        let addProductResult = await addProductToCartIfNeeded({
+          fetcher,
+          cart: redoContext.cart,
+          cartInfoToEnable: redoContext.cartInfoToEnable,
+        });
+        await setCartRedoEnabledAttribute({
+          fetcher,
+          cartInfoToEnable: redoContext.cartInfoToEnable,
+          enabled: true
+        });
+        return true;
+      },
+      disable: async () => {
+        if(!redoContext.cartInfoToEnable) {
+          return false;
+        }
+        await removeProductFromCartIfNeeded({
+          fetcher,
+          cart: redoContext.cart,
+          cartInfoToEnable: redoContext.cartInfoToEnable
+        });
+        await setCartRedoEnabledAttribute({
+          fetcher,
+          cartInfoToEnable: redoContext.cartInfoToEnable,
+          enabled: false
+        });
+        return true;
+      },
+      get enabled() {
+        return redoContext.enabled;
+      },
+      get price() {
+        return Number(redoContext.cartInfoToEnable?.selectedVariant.price.amount);
+      },
+      get cartProduct() {
+        return redoContext.cartInfoToEnable?.selectedVariant;
+      },
+      get cartAttribute() {
+        return redoContext.cartInfoToEnable?.cartAttribute
+      }
     }
-  }
+  }, [])
 };
 
 export {
