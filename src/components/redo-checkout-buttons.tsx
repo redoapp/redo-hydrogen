@@ -3,7 +3,6 @@ import {
   CartForm,
   CartActionInput,
   CartReturn,
-  Storefront,
 } from "@shopify/hydrogen";
 import { useRedoCoverageClient } from "../providers/redo-coverage-client";
 import { CartInfoToEnable, RedoCoverageClient } from "../types";
@@ -89,8 +88,6 @@ const findAncestor = (
 
 const RedoCheckoutButtons = (props: {
   cart: CartReturn;
-  storefront: Storefront;
-  storeId: string;
   children?: ReactNode;
   onClick?: (enabled: boolean) => void;
 }) => {
@@ -105,12 +102,16 @@ const RedoCheckoutButtons = (props: {
 
   useEffect(() => {
     (async () => {
-      const buttons = await getButtonsToShow({ redoCoverageClient, cart, storeId: props.storeId });
+      if(!redoCoverageClient.storeId) {
+        return;
+      }
+
+      const buttons = await getButtonsToShow({ redoCoverageClient, cart, storeId: redoCoverageClient.storeId });
       if(buttons) {
         setCheckoutButtonsUI(buttons);
       }
     })();
-  }, [cart, redoCoverageClient.price]);
+  }, [cart, redoCoverageClient.price, redoCoverageClient.storeId]);
 
   const wrapperClickHandler = async (e: MouseEvent) => {
     let clickedElement = e.target as HTMLElement;
