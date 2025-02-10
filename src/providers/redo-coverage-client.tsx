@@ -68,10 +68,6 @@ const RedoProvider = ({
 
       setLoading(false);
       
-      if(json?.coverageProducts?.[0]?.cartInfoToEnable) {
-        return;
-      }
-      
       setCartInfoToEnable(json.coverageProducts[0].cartInfoToEnable);
     })
   }, [cart]);
