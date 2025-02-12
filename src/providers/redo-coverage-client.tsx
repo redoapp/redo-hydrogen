@@ -10,7 +10,7 @@ const DEFAULT_REDO_CONTEXT_VALUE: RedoContextValue = {
   loading: true,
 }
 
-const RedoContext = createContext(DEFAULT_REDO_CONTEXT_VALUE);
+const RedoContext = createContext<RedoContextValue>(DEFAULT_REDO_CONTEXT_VALUE);
 
 const RedoProvider = ({
   cart,
@@ -144,11 +144,17 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
     get price() {
       return Number(redoContext.cartInfoToEnable?.selectedVariant.price.amount);
     },
+    get cart() {
+      return redoContext.cart;
+    },
     get cartProduct() {
       return redoContext.cartInfoToEnable?.selectedVariant;
     },
     get cartAttribute() {
       return redoContext.cartInfoToEnable?.cartAttribute
+    },
+    get storeId() {
+      return redoContext.storeId;
     }
   }
 };

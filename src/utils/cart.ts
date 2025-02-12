@@ -1,7 +1,6 @@
 import { FetcherWithComponents, useFetcher } from "@remix-run/react";
 import { CartInfoToEnable } from "../types";
 import { CartForm, CartReturn } from "@shopify/hydrogen";
-import { CartLine } from "@shopify/hydrogen-react/storefront-api-types";
 import type { AppData } from '@remix-run/react/dist/data';
 import React from 'react'
 

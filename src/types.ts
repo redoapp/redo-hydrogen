@@ -13,6 +13,8 @@ interface RedoCoverageClient {
   get loading(): boolean;
   get enabled(): boolean;
   get price(): number;
+  get storeId(): string | undefined;
+  get cart(): CartReturn | undefined;
   get cartProduct(): CartProductVariantFragment | undefined
   get cartAttribute(): CartAttributeKey | undefined
 }
