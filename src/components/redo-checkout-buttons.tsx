@@ -92,8 +92,8 @@ const RedoCheckoutButtons = (props: {
   onClick?: (enabled: boolean) => void;
 }) => {
   const redoCoverageClient = useRedoCoverageClient();
-  let cart = props.cart;
-  let checkoutUrl = cart.checkoutUrl;
+  let cart = redoCoverageClient.cart;
+  let checkoutUrl = redoCoverageClient.cart?.checkoutUrl || '/checkout';
   let [redoProductToAdd, setRedoProductToAdd] =
     useState<CartInfoToEnable | null>(null);
   let [checkoutButtonsUI, setCheckoutButtonsUI] = useState<CheckoutButtonUIResponse | null>(
@@ -102,7 +102,7 @@ const RedoCheckoutButtons = (props: {
 
   useEffect(() => {
     (async () => {
-      if(!redoCoverageClient.storeId) {
+      if(!redoCoverageClient.storeId || !cart) {
         return;
       }
 
