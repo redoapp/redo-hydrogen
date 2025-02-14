@@ -27,7 +27,7 @@ const RedoProvider = ({
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if(!cart?.lines?.nodes) {
+    if(!cart) {
       return;
     }
 
