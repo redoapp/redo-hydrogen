@@ -27,6 +27,10 @@ const RedoProvider = ({
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    if(!cart?.lines?.nodes) {
+      return;
+    }
+
     fetch(`https://${REDO_PUBLIC_API_HOSTNAME}/v2.2/stores/${storeId}/coverage-products`, {
       method: 'POST',
       headers: {
@@ -68,6 +72,10 @@ const RedoProvider = ({
 
       setLoading(false);
       
+      if(!json?.coverageProducts?.[0]?.cartInfoToEnable) {
+        return;
+      }
+
       setCartInfoToEnable(json.coverageProducts[0].cartInfoToEnable);
     })
   }, [cart]);
