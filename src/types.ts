@@ -12,7 +12,8 @@ interface RedoCoverageClient {
   disable(): Promise<boolean>;
   get loading(): boolean;
   get enabled(): boolean;
-  get price(): number;
+  get eligible(): boolean;
+  get price(): number | undefined;
   get storeId(): string | undefined;
   get cart(): CartReturn | undefined;
   get cartProduct(): CartProductVariantFragment | undefined;

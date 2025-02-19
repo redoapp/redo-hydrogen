@@ -36,7 +36,7 @@ const RedoProvider = ({
   }
 
   useEffect(() => {
-    if(!cart) {
+    if(!cart || !storeId) {
       return;
     }
 
@@ -106,7 +106,7 @@ const RedoProvider = ({
         });
         return;
       }
-      
+
       let json = await res.json();
 
       setLoading(false);
@@ -117,7 +117,7 @@ const RedoProvider = ({
 
       setCartInfoToEnable(json.coverageProducts[0].cartInfoToEnable);
     })
-  }, [cart]);
+  }, [cart, storeId]);
   
   const contextVal: RedoContextValue = {
     enabled: true,
@@ -186,13 +186,16 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
     get loading() {
       return redoContext.loading;
     },
+    get eligible() {
+      return !this.loading && !!this.price && !!this.cartProduct;
+    },
     get enabled() {
       return redoContext.enabled;
     },
     get price() {
       let priceToEnable = redoContext.cartInfoToEnable?.selectedVariant?.price?.amount;
       if(!priceToEnable || Number(priceToEnable).toString() === 'NaN') {
-        return 0;
+        return undefined;
       }
 
       return Number(priceToEnable);
