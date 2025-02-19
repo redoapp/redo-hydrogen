@@ -1,3 +1,7 @@
+### 1.1.2
+
+ - Update exports to include RedoError and RedoErrorType
+
 ### 1.1.1
 
  - Add errors field to RedoCoverageClient
