@@ -15,8 +15,9 @@ interface RedoCoverageClient {
   get price(): number;
   get storeId(): string | undefined;
   get cart(): CartReturn | undefined;
-  get cartProduct(): CartProductVariantFragment | undefined
-  get cartAttribute(): CartAttributeKey | undefined
+  get cartProduct(): CartProductVariantFragment | undefined;
+  get cartAttribute(): CartAttributeKey | undefined;
+  get errors(): RedoError[] | undefined;
 }
 
 type CartInfoToEnable = {
@@ -31,13 +32,31 @@ type RedoContextValue = {
   loading: boolean,
   storeId?: string,
   cartInfoToEnable?: CartInfoToEnable,
-  cart?: CartReturn
+  cart?: CartReturn,
+  errors?: RedoError[],
 };
+
+enum RedoErrorType {
+  ApiBadRequest = "API_BAD_REQUEST",
+  ApiServerError = "API_SERVER_ERROR",
+  ApiUnknownError = "API_UNKNOWN_ERROR"
+};
+
+type RedoError = {
+  type: RedoErrorType,
+  message: string,
+  context: any
+};
+
+export {
+  RedoErrorType,
+}
 
 export type {
   CartAttributeKey,
   CartInfoToEnable,
   RedoContextValue,
   RedoCoverageClient,
-  CartProductVariantFragment
+  CartProductVariantFragment,
+  RedoError
 }

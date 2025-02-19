@@ -7,6 +7,7 @@ import {
 import { useRedoCoverageClient } from "../providers/redo-coverage-client";
 import { CartInfoToEnable, RedoCoverageClient } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
+import { CurrencyCode } from "@shopify/hydrogen-react/storefront-api-types";
 
 type CheckoutButtonUIResponse = {
   html: string;
@@ -44,6 +45,10 @@ const getButtonsToShow = ({
         ui: json
       });
 
+      if(!ui) {
+        return reject(null);
+      }
+
       return resolve(ui);
     });
   });
@@ -58,10 +63,15 @@ const applyButtonVariables = ({
   cart: CartReturn,
   ui: CheckoutButtonUIResponse
 }): CheckoutButtonUIResponse | null => {
+  let currencyCode: CurrencyCode = cart.cost.totalAmount.currencyCode;
+  if(currencyCode === 'XXX') {
+    currencyCode = 'USD';
+  }
+
   const cartContainsRedo = !!(cart.lines.nodes.some((cartItem) => cartItem.merchandise?.product?.vendor === 're:do'));
   const combinedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: cart.cost.totalAmount.currencyCode
+    currency: currencyCode
   }).format(Number(cart.cost.totalAmount.amount) + (cartContainsRedo ? 0 : redoCoverageClient.price));
 
   if(!combinedPrice || !combinedPrice.length || combinedPrice.includes('NaN')) {

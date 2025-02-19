@@ -1,7 +1,7 @@
 import { useFetcher } from "@remix-run/react";
 import { CartReturn } from "@shopify/hydrogen";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient } from "../types";
+import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient, RedoError, RedoErrorType } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
 import { addProductToCartIfNeeded, removeProductFromCartIfNeeded, setCartRedoEnabledAttribute, useFetcherWithPromise } from "../utils/cart";
 
@@ -25,6 +25,15 @@ const RedoProvider = ({
   const [cartAttribute, setCartAttribute] = useState<CartAttributeKey>();
   const [cartInfoToEnable, setCartInfoToEnable] = useState<CartInfoToEnable>();
   const [loading, setLoading] = useState<boolean>(true);
+  const [errors, setErrors] = useState<RedoError[]>([]);
+
+  const logUniqueError = (newError: RedoError) => {
+    if(errors.find((err) => err.type === newError.type)) {
+    } else {
+      setErrors([...errors, newError]);
+    }
+    return newError;
+  }
 
   useEffect(() => {
     if(!cart) {
@@ -68,6 +77,36 @@ const RedoProvider = ({
       })
     })
     .then(async (res) => {
+      if(res.status === 500) {
+        logUniqueError({
+          type: RedoErrorType.ApiServerError,
+          message: "Internal server error occured when getting available coverage products from Redo API.. Check your inputs are correct and storeId have been configured. Reach out to Redo support if the issue persists.",
+          context: {
+            json: await res.json()
+          }
+        });
+        return;
+      } else if(res.status === 400) {
+        logUniqueError({
+          type: RedoErrorType.ApiBadRequest,
+          message: "Bad request when getting available coverage products from Redo API. Check that the passed in cart is of the correct type Cart/CartReturn and includes all of the correct cart information.",
+          context: {
+            json: await res.json()
+          }
+        });
+        return;
+      } else if(res.status !== 200) {
+        logUniqueError({
+          type: RedoErrorType.ApiUnknownError,
+          message: "Unkown error occured while getting available coverage products from Redo API.",
+          context: {
+            status: res.status,
+            json: await res.json()
+          }
+        });
+        return;
+      }
+      
       let json = await res.json();
 
       setLoading(false);
@@ -86,6 +125,7 @@ const RedoProvider = ({
     storeId,
     cartInfoToEnable,
     cart,
+    errors: (errors?.length && errors.length > 0) ? errors : undefined
   };
 
   return (
@@ -150,7 +190,12 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       return redoContext.enabled;
     },
     get price() {
-      return Number(redoContext.cartInfoToEnable?.selectedVariant.price.amount);
+      let priceToEnable = redoContext.cartInfoToEnable?.selectedVariant?.price?.amount;
+      if(!priceToEnable || Number(priceToEnable).toString() === 'NaN') {
+        return 0;
+      }
+
+      return Number(priceToEnable);
     },
     get cart() {
       return redoContext.cart;
@@ -163,6 +208,9 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
     },
     get storeId() {
       return redoContext.storeId;
+    },
+    get errors() {
+      return redoContext.errors;
     }
   }
 };
