@@ -115,13 +115,7 @@ const removeLinesFromCart = async ({
 
   if(cart && isCartWithActionsDocs(cart)) {
     cart.linesRemove(lineIds);
-    await waitForConditionsMetOrTimeout({
-      conditions: [
-        () => cart.status === 'idle',
-        () => isRedoInCart({ cart })
-      ],
-      timeoutMs: 10000
-    });
+    await waitCartIdle();
   } else {
     await fetcher.submit(
       {
