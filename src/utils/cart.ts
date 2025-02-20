@@ -278,6 +278,8 @@ function useFetcherWithPromise<TData = AppData>(opts?: Parameters<typeof useFetc
 
 type WaitCartIdleCallback = () => Promise<CartReturn | CartWithActionsDocs>;
 
+// This function allows us to await a cart idle state without breaking React rules.
+// It returns a function, which returns a promise, which will resolve once the cart value passed in reaches an idle state.
 // Not intended for use with CartReturn, but will accept that value if passed in to avoid breaking rules of hooks
 const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | undefined) => {
   const resolveRef = useRef<any>(null)
