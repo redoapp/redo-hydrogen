@@ -3,7 +3,8 @@ import { CartReturn } from "@shopify/hydrogen";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient, RedoError, RedoErrorType } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
-import { addProductToCartIfNeeded, removeProductFromCartIfNeeded, setCartRedoEnabledAttribute, useFetcherWithPromise } from "../utils/cart";
+import { addProductToCartIfNeeded, removeProductFromCartIfNeeded, setCartRedoEnabledAttribute, useFetcherWithPromise, isCartWithActionsDocs, getCartLines } from "../utils/cart";
+import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 
 const DEFAULT_REDO_CONTEXT_VALUE: RedoContextValue = {
   enabled: false,
@@ -17,7 +18,7 @@ const RedoProvider = ({
   storeId,
   children
 }: {
-  cart: CartReturn,
+  cart: CartReturn | CartWithActionsDocs,
   storeId: string,
   children: ReactNode,
 }): ReactNode => {
@@ -40,6 +41,8 @@ const RedoProvider = ({
       return;
     }
 
+    let cartLines = getCartLines(cart);
+
     fetch(`https://${REDO_PUBLIC_API_HOSTNAME}/v2.2/stores/${storeId}/coverage-products`, {
       method: 'POST',
       headers: {
@@ -47,7 +50,7 @@ const RedoProvider = ({
       },
       body: JSON.stringify({
         cart: {
-          lineItems: cart.lines.nodes.map((cartLine) => ({
+          lineItems: cartLines.map((cartLine) => ({
             id: cartLine.id,
             originalPrice: {
               amount: cartLine.merchandise?.price?.amount,
@@ -187,7 +190,7 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       return redoContext.loading;
     },
     get eligible() {
-      return !this.loading && !!this.price && !!this.cartProduct;
+      return !this.loading && !!this.price && !!this.cartProduct && !!this.cart?.cost;
     },
     get enabled() {
       return redoContext.enabled;
