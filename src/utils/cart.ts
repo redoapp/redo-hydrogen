@@ -45,7 +45,6 @@ const waitForConditionsMetOrTimeout = ({
     let start = Date.now();
     let interval = setInterval(() => {
       if((Date.now() - start) > timeoutMs) {
-        console.log('Timeout hit :(');
         clearInterval(interval);
         return resolve(false);
       }
@@ -53,7 +52,6 @@ const waitForConditionsMetOrTimeout = ({
       let conditionsMet = conditions.every((conditionCallback) => conditionCallback());
 
       if(conditionsMet) {
-        console.log('Conditions met!');
         clearInterval(interval);
         return resolve(true);
       }
@@ -72,8 +70,6 @@ const addProductToCartIfNeeded = async ({
   waitCartIdle: WaitCartIdleCallback;
   cartInfoToEnable: CartInfoToEnable
 }) => {
-  console.log('Add product to cart if needed!')
-
   if(!cart) {
     return await addProductToCart({ cart, fetcher, waitCartIdle, cartInfoToEnable });
   }
@@ -189,9 +185,7 @@ const addProductToCart = async ({
 
   if(cart && isCartWithActionsDocs(cart)) {
     cart.linesAdd([redoProductLine]);
-    console.log('[useWaitCartIdle][addProductToCart] About to await...');
     await waitCartIdle();
-    console.log('[useWaitCartIdle][addProductToCart] Done awaiting!');
   } else {
     await fetcher.submit(
       {
@@ -231,9 +225,7 @@ const setCartRedoEnabledAttribute = async ({
 
   if(cart && isCartWithActionsDocs(cart)) {
     cart.cartAttributesUpdate([redoCartAttribute]);
-    console.log('[useWaitCartIdle][setCartRedoEnabledAttribute] About to await...');
     await waitCartIdle();
-    console.log('[useWaitCartIdle][setCartRedoEnabledAttribute] Done awaiting!');
   } else {
     await fetcher.submit(
       {
@@ -298,7 +290,6 @@ const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | undefined) => 
   }
 
   const resetResolver = useCallback(() => {
-    console.log('[useWaitCartIdle] Reset resolver');
     promiseRef.current = new Promise((resolve) => {
       resolveRef.current = resolve
     })
@@ -306,8 +297,6 @@ const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | undefined) => 
 
   const waitCartIdle = useCallback(
     async () => {
-      console.log('[useWaitCartIdle] cart or promiseRef change');
-      console.log(promiseRef.current);
       return promiseRef.current
     },
     [cart, promiseRef]
@@ -317,18 +306,14 @@ const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | undefined) => 
     if(!cart) {
       return;
     }
-    console.log('[useWaitCartIdle] cart or resetResolver change');
     if(!isCartWithActionsDocs(cart)) {
-      console.log('[useWaitCartIdle] Not the right kind of cart');
       // Wrong type of cart. Just resolve.
       resolveRef.current?.(cart);
       resetResolver();
     } else if(cart.status === 'idle') {
-      console.log('[useWaitCartIdle] Yes idle!');
       resolveRef.current?.(cart)
       resetResolver();
     }
-    console.log('[useWaitCartIdle] Not idle.');
   }, [cart, resetResolver]);
 
   return waitCartIdle;
