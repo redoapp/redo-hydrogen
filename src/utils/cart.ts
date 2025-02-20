@@ -2,7 +2,7 @@ import { FetcherWithComponents, useFetcher } from "@remix-run/react";
 import { CartInfoToEnable } from "../types";
 import { CartForm, CartReturn } from "@shopify/hydrogen";
 import type { AppData } from '@remix-run/react/dist/data';
-import React from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 import { CartLine, ComponentizableCartLine } from "@shopify/hydrogen-react/storefront-api-types";
 
@@ -20,28 +20,62 @@ const getCartLines = (cart: CartReturn | CartWithActionsDocs): Array<CartLine | 
   }
 }
 
-const waitUntilCartIdle = (cart: CartWithActionsDocs): Promise<void> => {
+const isRedoInCart = ({
+  cart
+}: {
+  cart: CartReturn | CartWithActionsDocs
+}): boolean => {
+  if(!cart) {
+    return false;
+  }
+
+  return getCartLines(cart).some((cartLine) => {
+    return cartLine.merchandise.product.vendor === 're:do';
+  });
+}
+
+const waitForConditionsMetOrTimeout = ({
+  conditions,
+  timeoutMs
+}: {
+  conditions: (() => boolean)[];
+  timeoutMs: number;
+}): Promise<boolean> => {
   return new Promise((resolve, reject) => {
+    let start = Date.now();
     let interval = setInterval(() => {
-      if(cart.status === 'idle') {
+      if((Date.now() - start) > timeoutMs) {
+        console.log('Timeout hit :(');
         clearInterval(interval);
-        return resolve();
+        return resolve(false);
+      }
+
+      let conditionsMet = conditions.every((conditionCallback) => conditionCallback());
+
+      if(conditionsMet) {
+        console.log('Conditions met!');
+        clearInterval(interval);
+        return resolve(true);
       }
     }, 100);
-  });
+  })
 }
 
 const addProductToCartIfNeeded = async ({
   cart,
   fetcher,
+  waitCartIdle,
   cartInfoToEnable
 }: {
   cart: CartReturn | CartWithActionsDocs | undefined,
   fetcher: FetcherWithComponents<unknown>,
+  waitCartIdle: WaitCartIdleCallback;
   cartInfoToEnable: CartInfoToEnable
 }) => {
+  console.log('Add product to cart if needed!')
+
   if(!cart) {
-    return await addProductToCart({ cart, fetcher, cartInfoToEnable });
+    return await addProductToCart({ cart, fetcher, waitCartIdle, cartInfoToEnable });
   }
 
   const redoProductsInCart = getCartLines(cart).filter((cartLine) => {
@@ -51,15 +85,15 @@ const addProductToCartIfNeeded = async ({
     return cartLine.merchandise.id === `gid://shopify/ProductVariant/${cartInfoToEnable.variantId}`;
   });
   if(redoProductsInCart.length === 0) {
-    return await addProductToCart({ cart, fetcher, cartInfoToEnable });
+    return await addProductToCart({ cart, fetcher, waitCartIdle, cartInfoToEnable });
   } else if (redoProductsInCart.length === 1 && correctRedoProductInCart.length === 1 && correctRedoProductInCart[0].quantity === 1) {
     // No action needed
     return;
   } else {
     let isSuccess = true;
 
-    await removeLinesFromCart({ cart, fetcher, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
-    await addProductToCart({ cart, fetcher, cartInfoToEnable });
+    await removeLinesFromCart({ cart, fetcher, waitCartIdle, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
+    await addProductToCart({ cart, fetcher, waitCartIdle, cartInfoToEnable });
 
     return;
   }
@@ -68,10 +102,12 @@ const addProductToCartIfNeeded = async ({
 const removeLinesFromCart = async ({
   cart,
   fetcher,
+  waitCartIdle,
   lineIds
 }: {
   cart: CartReturn | CartWithActionsDocs | undefined;
   fetcher: FetcherWithComponents<unknown>;
+  waitCartIdle: WaitCartIdleCallback;
   lineIds: string[];
 }) => {
   const formInput = {
@@ -83,7 +119,13 @@ const removeLinesFromCart = async ({
 
   if(cart && isCartWithActionsDocs(cart)) {
     cart.linesRemove(lineIds);
-    await waitUntilCartIdle(cart);
+    await waitForConditionsMetOrTimeout({
+      conditions: [
+        () => cart.status === 'idle',
+        () => isRedoInCart({ cart })
+      ],
+      timeoutMs: 10000
+    });
   } else {
     await fetcher.submit(
       {
@@ -97,10 +139,12 @@ const removeLinesFromCart = async ({
 const removeProductFromCartIfNeeded = async ({
   cart,
   fetcher,
+  waitCartIdle,
   cartInfoToEnable
 }: {
   cart: CartReturn | CartWithActionsDocs | undefined,
   fetcher: FetcherWithComponents<unknown>,
+  waitCartIdle: WaitCartIdleCallback
   cartInfoToEnable: CartInfoToEnable
 }) => {
   if(!cart) {
@@ -113,16 +157,18 @@ const removeProductFromCartIfNeeded = async ({
   });
 
   if(redoProductsInCart.length !== 0) {
-    await removeLinesFromCart({ cart, fetcher, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
+    await removeLinesFromCart({ cart, fetcher, waitCartIdle, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
   } else {
   }
 };
 
 const addProductToCart = async ({
+  waitCartIdle,
   cart,
   fetcher,
   cartInfoToEnable,
 }: {
+  waitCartIdle: WaitCartIdleCallback;
   cart: CartReturn | CartWithActionsDocs | undefined,
   fetcher: FetcherWithComponents<unknown>,
   cartInfoToEnable: CartInfoToEnable
@@ -130,7 +176,6 @@ const addProductToCart = async ({
   const redoProductLine = {
     "merchandiseId": `gid://shopify/ProductVariant/${cartInfoToEnable.variantId}`,
     "quantity": 1,
-    "selectedVariant": cartInfoToEnable.selectedVariant
   };
 
   const formInput = {
@@ -144,7 +189,9 @@ const addProductToCart = async ({
 
   if(cart && isCartWithActionsDocs(cart)) {
     cart.linesAdd([redoProductLine]);
-    await waitUntilCartIdle(cart);
+    console.log('[useWaitCartIdle][addProductToCart] About to await...');
+    await waitCartIdle();
+    console.log('[useWaitCartIdle][addProductToCart] Done awaiting!');
   } else {
     await fetcher.submit(
       {
@@ -158,11 +205,13 @@ const addProductToCart = async ({
 const setCartRedoEnabledAttribute = async ({
   cart,
   fetcher,
+  waitCartIdle,
   cartInfoToEnable,
   enabled
 }: {
   cart: CartReturn | CartWithActionsDocs | undefined;
   fetcher: FetcherWithComponents<unknown>;
+  waitCartIdle: WaitCartIdleCallback;
   cartInfoToEnable: CartInfoToEnable | null;
   enabled: boolean;
 }) => {
@@ -182,7 +231,9 @@ const setCartRedoEnabledAttribute = async ({
 
   if(cart && isCartWithActionsDocs(cart)) {
     cart.cartAttributesUpdate([redoCartAttribute]);
-    await waitUntilCartIdle(cart);
+    console.log('[useWaitCartIdle][setCartRedoEnabledAttribute] About to await...');
+    await waitCartIdle();
+    console.log('[useWaitCartIdle][setCartRedoEnabledAttribute] Done awaiting!');
   } else {
     await fetcher.submit(
       {
@@ -233,12 +284,67 @@ function useFetcherWithPromise<TData = AppData>(opts?: Parameters<typeof useFetc
   return { ...fetcher, submit }
 }
 
+type WaitCartIdleCallback = () => Promise<CartReturn | CartWithActionsDocs>;
+
+// Not intended for use with CartReturn, but will accept that value if passed in to avoid breaking rules of hooks
+const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | undefined) => {
+  const resolveRef = useRef<any>(null)
+  const promiseRef = useRef<any>(null)
+
+  if (!promiseRef.current) {
+    promiseRef.current = new Promise<CartReturn | CartWithActionsDocs>((resolve) => {
+      resolveRef.current = resolve
+    })
+  }
+
+  const resetResolver = useCallback(() => {
+    console.log('[useWaitCartIdle] Reset resolver');
+    promiseRef.current = new Promise((resolve) => {
+      resolveRef.current = resolve
+    })
+  }, [promiseRef, resolveRef]);
+
+  const waitCartIdle = useCallback(
+    async () => {
+      console.log('[useWaitCartIdle] cart or promiseRef change');
+      console.log(promiseRef.current);
+      return promiseRef.current
+    },
+    [cart, promiseRef]
+  )
+
+  useEffect(() => {
+    if(!cart) {
+      return;
+    }
+    console.log('[useWaitCartIdle] cart or resetResolver change');
+    if(!isCartWithActionsDocs(cart)) {
+      console.log('[useWaitCartIdle] Not the right kind of cart');
+      // Wrong type of cart. Just resolve.
+      resolveRef.current?.(cart);
+      resetResolver();
+    } else if(cart.status === 'idle') {
+      console.log('[useWaitCartIdle] Yes idle!');
+      resolveRef.current?.(cart)
+      resetResolver();
+    }
+    console.log('[useWaitCartIdle] Not idle.');
+  }, [cart, resetResolver]);
+
+  return waitCartIdle;
+}
+
+export type {
+  WaitCartIdleCallback
+}
+
 export {
   DEFAULT_REDO_ENABLED_CART_ATTRIBUTE,
   addProductToCartIfNeeded,
   removeProductFromCartIfNeeded,
   setCartRedoEnabledAttribute,
   useFetcherWithPromise,
+  useWaitCartIdle,
   isCartWithActionsDocs,
   getCartLines
 };

@@ -107,6 +107,7 @@ const RedoCheckoutButtons = (props: {
   children?: ReactNode;
   onClick?: (enabled: boolean) => void;
 }) => {
+  console.log('I\'m a checkout button!');
   const redoCoverageClient = useRedoCoverageClient();
   let cart = redoCoverageClient.cart;
   let checkoutUrl = redoCoverageClient.cart?.checkoutUrl || '/checkout';
@@ -130,6 +131,7 @@ const RedoCheckoutButtons = (props: {
   }, [cart, redoCoverageClient.eligible, redoCoverageClient.price, redoCoverageClient.storeId]);
 
   const wrapperClickHandler = async (e: MouseEvent) => {
+    console.log('Wrapper click handler');
     let clickedElement = e.target as HTMLElement;
 
     if (!clickedElement.dataset) {
