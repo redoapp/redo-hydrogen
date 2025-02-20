@@ -1,3 +1,8 @@
+### 1.1.3
+
+ - Allow both Cart and CartWithActionsDocs as cart inputs
+ - Retrieve cart lines from either cart.lines.nodes or cart.lines.edges.nodes
+
 ### 1.1.2
 
  - Update exports to include RedoError and RedoErrorType
