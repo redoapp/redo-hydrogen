@@ -1,3 +1,7 @@
+### 1.1.4
+
+ - If cart is a CartWithActionsDocs, use those cart manipulation functions instead of fetchers
+
 ### 1.1.3
 
  - Allow both Cart and CartWithActionsDocs as cart inputs
