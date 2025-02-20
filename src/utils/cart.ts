@@ -58,7 +58,7 @@ const addProductToCartIfNeeded = async ({
   } else {
     let isSuccess = true;
 
-    await removeLinesFromCart({ fetcher, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
+    await removeLinesFromCart({ cart, fetcher, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
     await addProductToCart({ cart, fetcher, cartInfoToEnable });
 
     return;
@@ -66,11 +66,13 @@ const addProductToCartIfNeeded = async ({
 };
 
 const removeLinesFromCart = async ({
+  cart,
   fetcher,
   lineIds
 }: {
-  fetcher: FetcherWithComponents<unknown>,
-  lineIds: string[]
+  cart: CartReturn | CartWithActionsDocs | undefined;
+  fetcher: FetcherWithComponents<unknown>;
+  lineIds: string[];
 }) => {
   const formInput = {
     action: CartForm.ACTIONS.LinesRemove,
@@ -79,12 +81,17 @@ const removeLinesFromCart = async ({
     }
   }
 
-  await fetcher.submit(
-    {
-      [CartForm.INPUT_NAME]: JSON.stringify(formInput),
-    },
-    {method: 'POST', action: '/cart'},
-  );
+  if(cart && isCartWithActionsDocs(cart)) {
+    cart.linesRemove(lineIds);
+    await waitUntilCartIdle(cart);
+  } else {
+    await fetcher.submit(
+      {
+        [CartForm.INPUT_NAME]: JSON.stringify(formInput),
+      },
+      {method: 'POST', action: '/cart'},
+    );
+  }
 };
 
 const removeProductFromCartIfNeeded = async ({
@@ -106,7 +113,7 @@ const removeProductFromCartIfNeeded = async ({
   });
 
   if(redoProductsInCart.length !== 0) {
-    await removeLinesFromCart({ fetcher, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
+    await removeLinesFromCart({ cart, fetcher, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
   } else {
   }
 };
