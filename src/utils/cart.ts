@@ -3,15 +3,29 @@ import { CartInfoToEnable } from "../types";
 import { CartForm, CartReturn } from "@shopify/hydrogen";
 import type { AppData } from '@remix-run/react/dist/data';
 import React from 'react'
+import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
+import { CartLine, ComponentizableCartLine } from "@shopify/hydrogen-react/storefront-api-types";
 
 const DEFAULT_REDO_ENABLED_CART_ATTRIBUTE = 'redo_opted_in_from_cart';
+
+const isCartWithActionsDocs = (cart: CartReturn | CartWithActionsDocs): cart is CartWithActionsDocs => {
+  return (Array.isArray(cart.lines) && 'linesAdd' in cart && typeof cart.linesAdd === 'function');
+}
+
+const getCartLines = (cart: CartReturn | CartWithActionsDocs): Array<CartLine | ComponentizableCartLine> => {
+  if(isCartWithActionsDocs(cart)) {
+    return cart.lines;
+  } else {
+    return cart.lines.nodes ?? cart.lines.edges.map((edge) => edge.node);
+  }
+}
 
 const addProductToCartIfNeeded = async ({
   cart,
   fetcher,
   cartInfoToEnable
 }: {
-  cart: CartReturn | undefined,
+  cart: CartReturn | CartWithActionsDocs | undefined,
   fetcher: FetcherWithComponents<unknown>,
   cartInfoToEnable: CartInfoToEnable
 }) => {
@@ -19,7 +33,7 @@ const addProductToCartIfNeeded = async ({
     return await addProductToCart({ fetcher, cartInfoToEnable });
   }
 
-  const redoProductsInCart = cart.lines.nodes.filter((cartLine) => {
+  const redoProductsInCart = getCartLines(cart).filter((cartLine) => {
     return cartLine.merchandise.product.vendor === 're:do';
   });
   const correctRedoProductInCart = redoProductsInCart?.filter((cartLine) => {
@@ -67,7 +81,7 @@ const removeProductFromCartIfNeeded = async ({
   fetcher,
   cartInfoToEnable
 }: {
-  cart: CartReturn | undefined,
+  cart: CartReturn | CartWithActionsDocs | undefined,
   fetcher: FetcherWithComponents<unknown>,
   cartInfoToEnable: CartInfoToEnable
 }) => {
@@ -76,7 +90,7 @@ const removeProductFromCartIfNeeded = async ({
     return;
   }
 
-  const redoProductsInCart = cart.lines.nodes.filter((cartLine) => {
+  const redoProductsInCart = getCartLines(cart).filter((cartLine) => {
     return cartLine.merchandise.product.vendor === 're:do';
   });
 
@@ -190,5 +204,7 @@ export {
   addProductToCartIfNeeded,
   removeProductFromCartIfNeeded,
   setCartRedoEnabledAttribute,
-  useFetcherWithPromise
+  useFetcherWithPromise,
+  isCartWithActionsDocs,
+  getCartLines
 };

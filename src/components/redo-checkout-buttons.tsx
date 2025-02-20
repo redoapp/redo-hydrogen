@@ -8,6 +8,8 @@ import { useRedoCoverageClient } from "../providers/redo-coverage-client";
 import { CartInfoToEnable, RedoCoverageClient } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
 import { CurrencyCode } from "@shopify/hydrogen-react/storefront-api-types";
+import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
+import { getCartLines, isCartWithActionsDocs } from "../utils/cart";
 
 type CheckoutButtonUIResponse = {
   html: string;
@@ -20,7 +22,7 @@ const getButtonsToShow = ({
   storeId
 }: {
   redoCoverageClient: RedoCoverageClient,
-  cart: CartReturn,
+  cart: CartReturn | CartWithActionsDocs,
   storeId: string;
 }): Promise<CheckoutButtonUIResponse | null> => {
   return new Promise<CheckoutButtonUIResponse | null>((resolve, reject) => {
@@ -60,10 +62,10 @@ const applyButtonVariables = ({
   ui
 }: {
   redoCoverageClient: RedoCoverageClient,
-  cart: CartReturn,
+  cart: CartReturn | CartWithActionsDocs,
   ui: CheckoutButtonUIResponse
 }): CheckoutButtonUIResponse | null => {
-  if(!redoCoverageClient.eligible || !redoCoverageClient.price) {
+  if(!redoCoverageClient.eligible || !redoCoverageClient.price || !cart?.cost) {
     return null;
   }
 
@@ -72,7 +74,7 @@ const applyButtonVariables = ({
     currencyCode = 'USD';
   }
 
-  const cartContainsRedo = !!(cart.lines.nodes.some((cartItem) => cartItem.merchandise?.product?.vendor === 're:do'));
+  const cartContainsRedo = !!(getCartLines(cart).some((cartItem) => cartItem.merchandise?.product?.vendor === 're:do'));
   const combinedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyCode
@@ -101,7 +103,7 @@ const findAncestor = (
 };
 
 const RedoCheckoutButtons = (props: {
-  cart: CartReturn;
+  cart: CartReturn | CartWithActionsDocs;
   children?: ReactNode;
   onClick?: (enabled: boolean) => void;
 }) => {

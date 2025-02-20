@@ -1,4 +1,5 @@
 import { CartReturn } from "@shopify/hydrogen";
+import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 import { ProductVariant } from "@shopify/hydrogen-react/storefront-api-types";
 
 type CartProductVariantFragment = Omit<ProductVariant, 
@@ -15,7 +16,7 @@ interface RedoCoverageClient {
   get eligible(): boolean;
   get price(): number | undefined;
   get storeId(): string | undefined;
-  get cart(): CartReturn | undefined;
+  get cart(): CartReturn | CartWithActionsDocs | undefined;
   get cartProduct(): CartProductVariantFragment | undefined;
   get cartAttribute(): CartAttributeKey | undefined;
   get errors(): RedoError[] | undefined;
@@ -33,7 +34,7 @@ type RedoContextValue = {
   loading: boolean,
   storeId?: string,
   cartInfoToEnable?: CartInfoToEnable,
-  cart?: CartReturn,
+  cart?: CartReturn | CartWithActionsDocs,
   errors?: RedoError[],
 };
 
