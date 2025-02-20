@@ -20,6 +20,17 @@ const getCartLines = (cart: CartReturn | CartWithActionsDocs): Array<CartLine | 
   }
 }
 
+const waitUntilCartIdle = (cart: CartWithActionsDocs): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    let interval = setInterval(() => {
+      if(cart.status === 'idle') {
+        clearInterval(interval);
+        return resolve();
+      }
+    }, 100);
+  });
+}
+
 const addProductToCartIfNeeded = async ({
   cart,
   fetcher,
@@ -30,7 +41,7 @@ const addProductToCartIfNeeded = async ({
   cartInfoToEnable: CartInfoToEnable
 }) => {
   if(!cart) {
-    return await addProductToCart({ fetcher, cartInfoToEnable });
+    return await addProductToCart({ cart, fetcher, cartInfoToEnable });
   }
 
   const redoProductsInCart = getCartLines(cart).filter((cartLine) => {
@@ -40,7 +51,7 @@ const addProductToCartIfNeeded = async ({
     return cartLine.merchandise.id === `gid://shopify/ProductVariant/${cartInfoToEnable.variantId}`;
   });
   if(redoProductsInCart.length === 0) {
-    return await addProductToCart({ fetcher, cartInfoToEnable });
+    return await addProductToCart({ cart, fetcher, cartInfoToEnable });
   } else if (redoProductsInCart.length === 1 && correctRedoProductInCart.length === 1 && correctRedoProductInCart[0].quantity === 1) {
     // No action needed
     return;
@@ -48,7 +59,7 @@ const addProductToCartIfNeeded = async ({
     let isSuccess = true;
 
     await removeLinesFromCart({ fetcher, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
-    await addProductToCart({ fetcher, cartInfoToEnable });
+    await addProductToCart({ cart, fetcher, cartInfoToEnable });
 
     return;
   }
@@ -101,9 +112,11 @@ const removeProductFromCartIfNeeded = async ({
 };
 
 const addProductToCart = async ({
+  cart,
   fetcher,
-  cartInfoToEnable
+  cartInfoToEnable,
 }: {
+  cart: CartReturn | CartWithActionsDocs | undefined,
   fetcher: FetcherWithComponents<unknown>,
   cartInfoToEnable: CartInfoToEnable
 }) => {
@@ -122,41 +135,55 @@ const addProductToCart = async ({
     }
   }
 
-  await fetcher.submit(
-    {
-      [CartForm.INPUT_NAME]: JSON.stringify(formInput),
-    },
-    {method: 'POST', action: '/cart'},
-  );
+  if(cart && isCartWithActionsDocs(cart)) {
+    cart.linesAdd([redoProductLine]);
+    await waitUntilCartIdle(cart);
+  } else {
+    await fetcher.submit(
+      {
+        [CartForm.INPUT_NAME]: JSON.stringify(formInput),
+      },
+      {method: 'POST', action: '/cart'},
+    );
+  }
 };
 
 const setCartRedoEnabledAttribute = async ({
+  cart,
   fetcher,
   cartInfoToEnable,
   enabled
 }: {
-  fetcher: FetcherWithComponents<unknown>,
-  cartInfoToEnable: CartInfoToEnable | null,
-  enabled: boolean
+  cart: CartReturn | CartWithActionsDocs | undefined;
+  fetcher: FetcherWithComponents<unknown>;
+  cartInfoToEnable: CartInfoToEnable | null;
+  enabled: boolean;
 }) => {
+  const redoCartAttribute = {
+    key: cartInfoToEnable?.cartAttribute || DEFAULT_REDO_ENABLED_CART_ATTRIBUTE,
+    value: enabled.toString()
+  };
+
   const formInput = {
     action: CartForm.ACTIONS.AttributesUpdateInput,
     inputs: {
       attributes: [
-        {
-          key: cartInfoToEnable?.cartAttribute || DEFAULT_REDO_ENABLED_CART_ATTRIBUTE,
-          value: enabled.toString()
-        }
+        redoCartAttribute
       ]
     }
   }
 
-  await fetcher.submit(
-    {
-      [CartForm.INPUT_NAME]: JSON.stringify(formInput),
-    },
-    {method: 'POST', action: '/cart'},
-  );
+  if(cart && isCartWithActionsDocs(cart)) {
+    cart.cartAttributesUpdate([redoCartAttribute]);
+    await waitUntilCartIdle(cart);
+  } else {
+    await fetcher.submit(
+      {
+        [CartForm.INPUT_NAME]: JSON.stringify(formInput),
+      },
+      {method: 'POST', action: '/cart'},
+    );
+  }
 };
 
 type FetcherData<T> = NonNullable<T | unknown> // FIXME: used to use SerializeFrom which is deprecated. Can this be better typed?

@@ -164,6 +164,7 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
         cartInfoToEnable: redoContext.cartInfoToEnable,
       });
       await setCartRedoEnabledAttribute({
+        cart: redoContext.cart,
         fetcher,
         cartInfoToEnable: redoContext.cartInfoToEnable,
         enabled: true
@@ -180,6 +181,7 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
         cartInfoToEnable: redoContext.cartInfoToEnable
       });
       await setCartRedoEnabledAttribute({
+        cart: redoContext.cart,
         fetcher,
         cartInfoToEnable: redoContext.cartInfoToEnable,
         enabled: false
