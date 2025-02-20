@@ -27,10 +27,6 @@ const RedoProvider = ({
   const [cartInfoToEnable, setCartInfoToEnable] = useState<CartInfoToEnable>();
   const [loading, setLoading] = useState<boolean>(true);
   const [errors, setErrors] = useState<RedoError[]>([]);
-  
-  if(isCartWithActionsDocs(cart)) {
-    console.log(`[RedoProvider] cart status: ${cart.status} | cart items: ${cart.lines.length}`);
-  }
 
   const logUniqueError = (newError: RedoError) => {
     if(errors.find((err) => err.type === newError.type)) {
@@ -157,19 +153,13 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       waitCartIdle,
       cartInfoToEnable: redoContext.cartInfoToEnable
     });
-  }, [redoContext.loading])
-
-  if(redoContext.cart && isCartWithActionsDocs(redoContext.cart)) {
-    console.log(`[RedoCoverageClient] cart status: ${redoContext.cart.status} | cart items: ${redoContext.cart.lines.length}`);
-  }
+  }, [redoContext.loading]);
   
   return {
     enable: async () => {
-      console.log('Enable')
       if(redoContext.loading || !redoContext.cartInfoToEnable) {
         return false;
       }
-      console.log('About to add to cart');
       let addProductResult = await addProductToCartIfNeeded({
         fetcher,
         waitCartIdle,
