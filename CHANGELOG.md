@@ -1,3 +1,7 @@
+### 1.2.1
+
+ - Fix root types exports
+
 ### 1.2.0
 
  - If cart is a CartWithActionsDocs, use those cart manipulation functions instead of fetchers
