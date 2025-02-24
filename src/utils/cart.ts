@@ -20,6 +20,11 @@ const getCartLines = (cart: CartReturn | CartWithActionsDocs): Array<CartLine | 
   }
 }
 
+const cartLinesLoading = (cartLines: Array<CartLine | ComponentizableCartLine>): boolean => {
+  // When there is an optimistic cart, we get called before all the cartLines are loaded.
+  return cartLines.some((line) => line.id.includes("pending_gid"));
+}
+
 const isRedoInCart = ({
   cart
 }: {
@@ -327,5 +332,6 @@ export {
   useFetcherWithPromise,
   useWaitCartIdle,
   isCartWithActionsDocs,
-  getCartLines
+  getCartLines,
+  cartLinesLoading
 };
