@@ -1,15 +1,14 @@
 import React, { MouseEvent, ReactNode, useEffect, useState } from "react";
-import {
-  CartForm,
-  CartActionInput,
-  CartReturn,
-} from "@shopify/hydrogen";
+import { CartForm, CartActionInput, CartReturn } from "@shopify/hydrogen";
 import { useRedoCoverageClient } from "../providers/redo-coverage-client";
 import { CartInfoToEnable, RedoCoverageClient } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
 import { CurrencyCode } from "@shopify/hydrogen-react/storefront-api-types";
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 import { getCartLines, isCartWithActionsDocs } from "../utils/cart";
+
+import CircleSpinner from "../utils/circle-spinner.svg";
+import { executeWithTimeout } from "../utils/timeout";
 
 type CheckoutButtonUIResponse = {
   html: string;
@@ -112,9 +111,11 @@ const RedoCheckoutButtons = (props: {
   let checkoutUrl = redoCoverageClient.cart?.checkoutUrl || '/checkout';
   let [redoProductToAdd, setRedoProductToAdd] =
     useState<CartInfoToEnable | null>(null);
-  let [checkoutButtonsUI, setCheckoutButtonsUI] = useState<CheckoutButtonUIResponse | null>(
-    null
-  );
+  let [checkoutButtonsUI, setCheckoutButtonsUI] =
+    useState<CheckoutButtonUIResponse | null>(null);
+    
+  const [coveragePending, setCoveragePending] = useState(false);
+  const [nonCoveragePending, setNonCoveragePending] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -129,34 +130,79 @@ const RedoCheckoutButtons = (props: {
     })();
   }, [cart, redoCoverageClient.eligible, redoCoverageClient.price, redoCoverageClient.storeId]);
 
-  const wrapperClickHandler = async (e: MouseEvent) => {
-    let clickedElement = e.target as HTMLElement;
+  /** To avoid the inevitable spammers trying to checkout faster by clicking over and over, between the time the promise resolves and the new tab opens (or errors) */
+  const DELAY_TO_ALLOW_CLICKING_AGAIN = 2000;
+  const TIMEOUT_FOR_CHECKOUTS = 8000;
 
-    if (!clickedElement.dataset) {
+  const handleCoverageCheckoutClick = async () => {
+    setCoveragePending(true);
+    await executeWithTimeout(
+      redoCoverageClient.enable().then(async (result) => {
+        if (props.onClick) {
+          await props.onClick(result);
+        }
+      }),
+      TIMEOUT_FOR_CHECKOUTS,
+    )
+      .catch((e: any) => {
+        console.error(e);
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setCoveragePending(false);
+        }, DELAY_TO_ALLOW_CLICKING_AGAIN);
+      });
+  };
+
+  const handleNonCoverageClick = async () => {
+    /** The link doesn't have automatic rejection with a `disabled` attribute, so we need to check manually */
+    if (coveragePending || nonCoveragePending) {
       return;
     }
 
-    if (
-      findAncestor(
-        clickedElement,
-        (el) => el.dataset?.target == "coverage-button"
-      )
-    ) {
-      const attachResult = await redoCoverageClient.enable();
-      if (props.onClick) {
-        await props.onClick(attachResult);
-      }
+    setNonCoveragePending(true);
+
+    await executeWithTimeout(
+      redoCoverageClient.disable().then(async (result) => {
+        if (props.onClick) {
+          await props.onClick(result);
+        }
+        window.location.href = checkoutUrl;
+      }),
+      TIMEOUT_FOR_CHECKOUTS,
+    )
+      .catch((e: any) => {
+        console.error(e);
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setNonCoveragePending(false);
+        }, DELAY_TO_ALLOW_CLICKING_AGAIN);
+      });
+  };
+
+  const wrapperClickHandler = async (e: MouseEvent) => {
+    let clickedElement = e.target as HTMLElement;
+
+    if(!clickedElement.dataset) {
+      return;
+    }
+
+    const isCoverageButton = findAncestor(
+      clickedElement,
+      (el) => el.dataset?.target == "coverage-button"
+    );
+
+    const isNonCoverageButton = findAncestor(
+      clickedElement,
+      (el) => el.dataset?.target == "non-coverage-button",
+    );
+
+    if (isCoverageButton) {
+      await handleCoverageCheckoutClick();
       window.location.href = checkoutUrl;
-    } else if (
-      findAncestor(
-        clickedElement,
-        (el) => el.dataset.target == "non-coverage-button"
-      )
-    ) {
-      await redoCoverageClient.disable();
-      if (props.onClick) {
-        await props.onClick(false);
-      }
+    } else if (isNonCoverageButton) {
+      await handleNonCoverageClick();
       window.location.href = checkoutUrl;
     }
   };
@@ -164,11 +210,32 @@ const RedoCheckoutButtons = (props: {
   return (
     <div>
       {checkoutButtonsUI ? (
-        <div onClick={wrapperClickHandler}>
-          {
-            checkoutButtonsUI.css ? <style>{checkoutButtonsUI.css}</style> : ''
-          }
-          <div dangerouslySetInnerHTML={{ __html: checkoutButtonsUI.html }} />
+        <div onClick={wrapperClickHandler} style={{ position: "relative" }}>
+           {checkoutButtonsUI.css ? <style>{checkoutButtonsUI.css}</style> : ''}
+           <div
+            dangerouslySetInnerHTML={{ __html: checkoutButtonsUI.html }}
+            style={{ 
+              opacity: (coveragePending || nonCoveragePending) ? 0.25 : 1,
+              transition: 'opacity 0.2s ease-in-out'
+            }}
+          />
+          {(coveragePending || nonCoveragePending) && ( 
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 1,
+              }}
+            >
+              <CircleSpinner />
+            </div>
+          )} 
         </div>
       ) : (
         props.children
