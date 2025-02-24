@@ -22,7 +22,7 @@ const getCartLines = (cart: CartReturn | CartWithActionsDocs): Array<CartLine | 
 
 // https://shopify.dev/docs/api/hydrogen/2025-01/hooks/useoptimisticcart
 const isOptimisticCart = (cart: CartReturn | CartWithActionsDocs | OptimisticCart): cart is OptimisticCart => {
-  return 'isOptimistic' in cart && cart.isOptimistic || false;
+  return 'isOptimistic' in cart && (cart.isOptimistic ?? false);
 }
 
 const isRedoInCart = ({
