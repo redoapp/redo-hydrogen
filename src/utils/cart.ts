@@ -1,6 +1,6 @@
 import { FetcherWithComponents, useFetcher } from "@remix-run/react";
 import { CartInfoToEnable } from "../types";
-import { CartForm, CartReturn } from "@shopify/hydrogen";
+import { CartForm, CartReturn, OptimisticCart, OptimisticCartLine } from "@shopify/hydrogen";
 import type { AppData } from '@remix-run/react/dist/data';
 import React, { useCallback, useEffect, useRef } from 'react'
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
@@ -18,6 +18,11 @@ const getCartLines = (cart: CartReturn | CartWithActionsDocs): Array<CartLine | 
   } else {
     return cart.lines.nodes ?? cart.lines.edges.map((edge) => edge.node);
   }
+}
+
+// https://shopify.dev/docs/api/hydrogen/2025-01/hooks/useoptimisticcart
+const isOptimisticCart = (cart: CartReturn | CartWithActionsDocs | OptimisticCart): cart is OptimisticCart => {
+  return 'isOptimistic' in cart && (cart.isOptimistic ?? false);
 }
 
 const isRedoInCart = ({
@@ -327,5 +332,6 @@ export {
   useFetcherWithPromise,
   useWaitCartIdle,
   isCartWithActionsDocs,
-  getCartLines
+  getCartLines,
+  isOptimisticCart
 };

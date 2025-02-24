@@ -1,9 +1,9 @@
 import { useFetcher } from "@remix-run/react";
-import { CartReturn } from "@shopify/hydrogen";
+import { CartReturn, OptimisticCart } from "@shopify/hydrogen";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient, RedoError, RedoErrorType } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
-import { addProductToCartIfNeeded, removeProductFromCartIfNeeded, setCartRedoEnabledAttribute, useFetcherWithPromise, isCartWithActionsDocs, getCartLines, useWaitCartIdle } from "../utils/cart";
+import { addProductToCartIfNeeded, removeProductFromCartIfNeeded, setCartRedoEnabledAttribute, useFetcherWithPromise, isCartWithActionsDocs, getCartLines, useWaitCartIdle, isOptimisticCart } from "../utils/cart";
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 
 const DEFAULT_REDO_CONTEXT_VALUE: RedoContextValue = {
@@ -18,7 +18,7 @@ const RedoProvider = ({
   storeId,
   children
 }: {
-  cart: CartReturn | CartWithActionsDocs,
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart,
   storeId: string,
   children: ReactNode,
 }): ReactNode => {
@@ -37,7 +37,7 @@ const RedoProvider = ({
   }
 
   useEffect(() => {
-    if(!cart || !storeId) {
+    if(!cart || !storeId || isOptimisticCart(cart)) {
       return;
     }
 
