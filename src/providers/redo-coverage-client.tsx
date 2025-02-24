@@ -160,7 +160,7 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       if(redoContext.loading || !redoContext.cartInfoToEnable) {
         return false;
       }
-      const [addProductResult, setCartRedoEnabledResult] = await Promise.all([
+      await Promise.allSettled([
         addProductToCartIfNeeded({
           fetcher,
           waitCartIdle,
@@ -181,7 +181,7 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       if(!redoContext.cartInfoToEnable) {
         return false;
       }
-      const [removeProductResult, setCartRedoEnabledResult] = await Promise.all([
+      await Promise.allSettled([
         removeProductFromCartIfNeeded({
           fetcher,
           waitCartIdle,
