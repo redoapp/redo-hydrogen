@@ -160,38 +160,42 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       if(redoContext.loading || !redoContext.cartInfoToEnable) {
         return false;
       }
-      let addProductResult = await addProductToCartIfNeeded({
-        fetcher,
-        waitCartIdle,
-        cart: redoContext.cart,
-        cartInfoToEnable: redoContext.cartInfoToEnable,
-      });
-      await setCartRedoEnabledAttribute({
-        cart: redoContext.cart,
-        fetcher,
-        waitCartIdle,
-        cartInfoToEnable: redoContext.cartInfoToEnable,
-        enabled: true
-      });
+      const [addProductResult, setCartRedoEnabledResult] = await Promise.all([
+        addProductToCartIfNeeded({
+          fetcher,
+          waitCartIdle,
+          cart: redoContext.cart,
+          cartInfoToEnable: redoContext.cartInfoToEnable,
+        }),
+        setCartRedoEnabledAttribute({
+          cart: redoContext.cart,
+          fetcher,
+          waitCartIdle,
+          cartInfoToEnable: redoContext.cartInfoToEnable,
+          enabled: true
+        })
+      ]);
       return true;
     },
     disable: async () => {
       if(!redoContext.cartInfoToEnable) {
         return false;
       }
-      await removeProductFromCartIfNeeded({
-        fetcher,
-        waitCartIdle,
-        cart: redoContext.cart,
-        cartInfoToEnable: redoContext.cartInfoToEnable
-      });
-      await setCartRedoEnabledAttribute({
-        cart: redoContext.cart,
-        fetcher,
-        waitCartIdle,
-        cartInfoToEnable: redoContext.cartInfoToEnable,
-        enabled: false
-      });
+      const [removeProductResult, setCartRedoEnabledResult] = await Promise.all([
+        removeProductFromCartIfNeeded({
+          fetcher,
+          waitCartIdle,
+          cart: redoContext.cart,
+          cartInfoToEnable: redoContext.cartInfoToEnable
+        }),
+        setCartRedoEnabledAttribute({
+          cart: redoContext.cart,
+          fetcher,
+          waitCartIdle,
+          cartInfoToEnable: redoContext.cartInfoToEnable,
+          enabled: false
+        })
+      ]);
       return true;
     },
     get loading() {
