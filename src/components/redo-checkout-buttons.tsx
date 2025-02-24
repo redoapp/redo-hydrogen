@@ -69,7 +69,7 @@ const applyButtonVariables = ({
     return null;
   }
 
-  let currencyCode: CurrencyCode = cart.cost.totalAmount.currencyCode;
+  let currencyCode: CurrencyCode = cart.cost.subtotalAmount.currencyCode;
   if(currencyCode === 'XXX') {
     currencyCode = 'USD';
   }
@@ -78,7 +78,7 @@ const applyButtonVariables = ({
   const combinedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyCode
-  }).format(Number(cart.cost.totalAmount.amount) + (cartContainsRedo ? 0 : redoCoverageClient.price));
+  }).format(Number(cart.cost.subtotalAmount.amount) + (cartContainsRedo ? 0 : redoCoverageClient.price));
 
   if(!combinedPrice || !combinedPrice.length || combinedPrice.includes('NaN')) {
     return null;
