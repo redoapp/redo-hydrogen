@@ -8,12 +8,14 @@ import { CartLine, ComponentizableCartLine } from "@shopify/hydrogen-react/store
 
 const DEFAULT_REDO_ENABLED_CART_ATTRIBUTE = 'redo_opted_in_from_cart';
 
-const isCartWithActionsDocs = (cart: CartReturn | CartWithActionsDocs): cart is CartWithActionsDocs => {
+const isCartWithActionsDocs = (cart: CartReturn | CartWithActionsDocs| OptimisticCart): cart is CartWithActionsDocs => {
   return (Array.isArray(cart.lines) && 'linesAdd' in cart && typeof cart.linesAdd === 'function');
 }
 
-const getCartLines = (cart: CartReturn | CartWithActionsDocs): Array<CartLine | ComponentizableCartLine> => {
-  if(isCartWithActionsDocs(cart)) {
+const getCartLines = (cart: CartReturn | CartWithActionsDocs | OptimisticCart): Array<CartLine | ComponentizableCartLine> => {
+  if (isOptimisticCart(cart)) {
+    return cart.lines.nodes;
+  } else if (isCartWithActionsDocs(cart)) {
     return cart.lines;
   } else {
     return cart.lines.nodes ?? cart.lines.edges.map((edge) => edge.node);
@@ -28,7 +30,7 @@ const isOptimisticCart = (cart: CartReturn | CartWithActionsDocs | OptimisticCar
 const isRedoInCart = ({
   cart
 }: {
-  cart: CartReturn | CartWithActionsDocs
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart
 }): boolean => {
   if(!cart) {
     return false;
@@ -70,7 +72,7 @@ const addProductToCartIfNeeded = async ({
   waitCartIdle,
   cartInfoToEnable
 }: {
-  cart: CartReturn | CartWithActionsDocs | undefined,
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined,
   fetcher: FetcherWithComponents<unknown>,
   waitCartIdle: WaitCartIdleCallback;
   cartInfoToEnable: CartInfoToEnable
@@ -106,7 +108,7 @@ const removeLinesFromCart = async ({
   waitCartIdle,
   lineIds
 }: {
-  cart: CartReturn | CartWithActionsDocs | undefined;
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined;
   fetcher: FetcherWithComponents<unknown>;
   waitCartIdle: WaitCartIdleCallback;
   lineIds: string[];
@@ -137,7 +139,7 @@ const removeProductFromCartIfNeeded = async ({
   waitCartIdle,
   cartInfoToEnable
 }: {
-  cart: CartReturn | CartWithActionsDocs | undefined,
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined,
   fetcher: FetcherWithComponents<unknown>,
   waitCartIdle: WaitCartIdleCallback
   cartInfoToEnable: CartInfoToEnable
@@ -164,7 +166,7 @@ const addProductToCart = async ({
   cartInfoToEnable,
 }: {
   waitCartIdle: WaitCartIdleCallback;
-  cart: CartReturn | CartWithActionsDocs | undefined,
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined,
   fetcher: FetcherWithComponents<unknown>,
   cartInfoToEnable: CartInfoToEnable
 }) => {
@@ -202,7 +204,7 @@ const setCartRedoEnabledAttribute = async ({
   cartInfoToEnable,
   enabled
 }: {
-  cart: CartReturn | CartWithActionsDocs | undefined;
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined;
   fetcher: FetcherWithComponents<unknown>;
   waitCartIdle: WaitCartIdleCallback;
   cartInfoToEnable: CartInfoToEnable | null;
@@ -275,17 +277,17 @@ function useFetcherWithPromise<TData = AppData>(opts?: Parameters<typeof useFetc
   return { ...fetcher, submit }
 }
 
-type WaitCartIdleCallback = () => Promise<CartReturn | CartWithActionsDocs>;
+type WaitCartIdleCallback = () => Promise<CartReturn | CartWithActionsDocs | OptimisticCart>;
 
 // This function allows us to await a cart idle state without breaking React rules.
 // It returns a function, which returns a promise, which will resolve once the cart value passed in reaches an idle state.
 // Not intended for use with CartReturn, but will accept that value if passed in to avoid breaking rules of hooks
-const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | undefined) => {
+const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined) => {
   const resolveRef = useRef<any>(null)
   const promiseRef = useRef<any>(null)
 
   if (!promiseRef.current) {
-    promiseRef.current = new Promise<CartReturn | CartWithActionsDocs>((resolve) => {
+    promiseRef.current = new Promise<CartReturn | CartWithActionsDocs | OptimisticCart>((resolve) => {
       resolveRef.current = resolve
     })
   }
