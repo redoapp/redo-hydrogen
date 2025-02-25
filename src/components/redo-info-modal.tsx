@@ -19,6 +19,17 @@ interface RedoInfoModalProps {
     infoModalContent?: ReactNode;
 }
 
+function useInjectStyle(styleContent: string) {
+    useEffect(() => {
+      const styleTag = document.createElement('style');
+      styleTag.textContent = styleContent;
+      document.head.appendChild(styleTag);
+      return () => {
+        document.head.removeChild(styleTag);
+      };
+    }, [styleContent]);
+}
+
 const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalContent }: 
 { 
     open: boolean; 
@@ -27,50 +38,36 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
     infoModalImageUrl?: string;
     modalContent?: ReactNode;
 }) => {
-    const [isBrowser, setIsBrowser] = useState(false);
-
-    useEffect(() => {
-        setIsBrowser(true);
+    useInjectStyle( `
+        ${fadeInKeyframes}
+        ${slideInKeyframes}
         
-        // Add animations and responsive styles
-        const styleTag = document.createElement('style');
-        styleTag.innerHTML = `
-            ${fadeInKeyframes}
-            ${slideInKeyframes}
-            ${slideOutKeyframes}
-            
-            @media (max-width: 768px) {
-                .redo-info-modal__container {
-                    flex-direction: column !important;
-                    align-items: stretch !important;
-                    overflow: auto !important;
-                    width: 95% !important;
-                }
-                
-                .redo-info-modal__sideImageContainer {
-                    width: 100% !important;
-                    min-width: unset !important;
-                    max-height: 140px !important;
-                    overflow: hidden !important;
-                }
-                
-                .redo-info-modal__sideImageContainer img {
-                    height: 140px !important;
-                    max-height: 140px !important;
-                }
-                
-                .redo-info-modal__contentContainer {
-                    width: 100% !important;
-                    box-sizing: border-box !important;
-                }
+        @media (max-width: 768px) {
+            .redo-info-modal__container {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                overflow: auto !important;
+                width: 95% !important;
             }
-        `;
-        document.head.appendChild(styleTag);
-
-        return () => {
-            styleTag.remove();
-        };
-    }, []);
+            
+            .redo-info-modal__sideImageContainer {
+                width: 100% !important;
+                min-width: unset !important;
+                max-height: 140px !important;
+                overflow: hidden !important;
+            }
+            
+            .redo-info-modal__sideImageContainer img {
+                height: 140px !important;
+                max-height: 140px !important;
+            }
+            
+            .redo-info-modal__contentContainer {
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+        }
+    `);
 
     if (!open) return <></>;
 
@@ -264,10 +261,6 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
         </div>
     );
 
-    if (!isBrowser) {
-        return <></>;
-    }
-
     return createPortal(fullModalContent, document.body);
 };
 
@@ -434,19 +427,6 @@ const slideInKeyframes = `
     }
 `;
 
-const slideOutKeyframes = `
-    @keyframes slideOut {
-        from {
-            opacity: 1;
-            transform: translate(-50%, -50%);
-        }
-        to {
-            opacity: 0;
-            transform: translate(-50%, -48%);
-        }
-    }
-`;
 
 
-
-export { RedoInfoCard };
+export { RedoInfoModal };
