@@ -7,6 +7,9 @@ import { CurrencyCode } from "@shopify/hydrogen-react/storefront-api-types";
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 import { getCartLines, isCartWithActionsDocs } from "../utils/cart";
 
+import CircleSpinner from "../utils/circle-spinner.svg";
+import { executeWithTimeout } from "../utils/timeout";
+
 type CheckoutButtonUIResponse = {
   html: string;
   css: string;
@@ -43,7 +46,7 @@ const getButtonsToShow = ({
         ui: json
       });
 
-      if(!ui) {
+      if (!ui) {
         return reject(null);
       }
 
@@ -61,12 +64,12 @@ const applyButtonVariables = ({
   cart: CartReturn | CartWithActionsDocs | OptimisticCart,
   ui: CheckoutButtonUIResponse
 }): CheckoutButtonUIResponse | null => {
-  if(!redoCoverageClient.eligible || !redoCoverageClient.price || !cart?.cost) {
+  if (!redoCoverageClient.eligible || !redoCoverageClient.price || !cart?.cost) {
     return null;
   }
 
   let currencyCode: CurrencyCode = cart.cost.subtotalAmount.currencyCode;
-  if(currencyCode === 'XXX') {
+  if (currencyCode === 'XXX') {
     currencyCode = 'USD';
   }
 
@@ -76,7 +79,7 @@ const applyButtonVariables = ({
     currency: currencyCode
   }).format(Number(cart.cost.subtotalAmount.amount) + (cartContainsRedo ? 0 : redoCoverageClient.price));
 
-  if(!combinedPrice || !combinedPrice.length || combinedPrice.includes('NaN')) {
+  if (!combinedPrice || !combinedPrice.length || combinedPrice.includes('NaN')) {
     return null;
   }
 
@@ -108,22 +111,53 @@ const RedoCheckoutButtons = (props: {
   let checkoutUrl = redoCoverageClient.cart?.checkoutUrl || '/checkout';
   let [redoProductToAdd, setRedoProductToAdd] =
     useState<CartInfoToEnable | null>(null);
-  let [checkoutButtonsUI, setCheckoutButtonsUI] = useState<CheckoutButtonUIResponse | null>(
-    null
-  );
+  let [checkoutButtonsUI, setCheckoutButtonsUI] =
+    useState<CheckoutButtonUIResponse | null>(null);
+    
+  const [buttonPending, setButtonPending] = useState(false);
 
   useEffect(() => {
     (async () => {
-      if(!redoCoverageClient.eligible || !cart || !redoCoverageClient.storeId) {
+      if (!redoCoverageClient.eligible || !cart || !redoCoverageClient.storeId) {
         return;
       }
 
       const buttons = await getButtonsToShow({ redoCoverageClient, cart, storeId: redoCoverageClient.storeId });
-      if(buttons) {
+      if (buttons) {
         setCheckoutButtonsUI(buttons);
       }
     })();
   }, [cart, redoCoverageClient.eligible, redoCoverageClient.price, redoCoverageClient.storeId]);
+
+    /** To avoid the inevitable spammers trying to checkout faster by clicking over and over, between the time the promise resolves and the new tab opens (or errors) */
+  const DELAY_TO_ALLOW_CLICKING_AGAIN = 2000;
+  const TIMEOUT_FOR_CHECKOUTS = 8000;
+  
+  const handleCoverageCheckoutClick = async (isCoverage: boolean) => {
+    if (!redoCoverageClient || !redoCoverageClient.enable || !redoCoverageClient.disable) {
+      console.error('Required redoCoverageClient methods not available');
+      return;
+    }
+
+    setButtonPending(true);
+    try {
+      const functionToCall = isCoverage ? redoCoverageClient.enable : redoCoverageClient.disable;
+      const result = await executeWithTimeout(
+        functionToCall(),
+        TIMEOUT_FOR_CHECKOUTS
+      );
+      
+      if (props.onClick) {
+        await props.onClick(result);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setTimeout(() => {
+        setButtonPending(false);
+      }, DELAY_TO_ALLOW_CLICKING_AGAIN);
+    }
+  };
 
   const wrapperClickHandler = async (e: MouseEvent) => {
     let clickedElement = e.target as HTMLElement;
@@ -132,26 +166,21 @@ const RedoCheckoutButtons = (props: {
       return;
     }
 
-    if (
-      findAncestor(
-        clickedElement,
-        (el) => el.dataset?.target == "coverage-button"
-      )
-    ) {
-      const attachResult = await redoCoverageClient.enable();
-      if (props.onClick) {
-        await props.onClick(attachResult);
-      }
-      window.location.href = checkoutUrl;
-    } else if (
-      findAncestor(
-        clickedElement,
-        (el) => el.dataset.target == "non-coverage-button"
-      )
-    ) {
-      await redoCoverageClient.disable();
-      if (props.onClick) {
-        await props.onClick(false);
+    const isCoverageButton = findAncestor(
+      clickedElement,
+      (el) => el.dataset?.target == "coverage-button"
+    );
+
+    const isNonCoverageButton = findAncestor(
+      clickedElement,
+      (el) => el.dataset?.target == "non-coverage-button",
+    );
+
+    if (isCoverageButton || isNonCoverageButton) {
+      try {
+        await handleCoverageCheckoutClick(isCoverageButton ? true : false);
+      } catch (error) {
+        console.error('Failed to update coverage state:', error);
       }
       window.location.href = checkoutUrl;
     }
@@ -160,11 +189,32 @@ const RedoCheckoutButtons = (props: {
   return (
     <div>
       {checkoutButtonsUI ? (
-        <div onClick={wrapperClickHandler}>
-          {
-            checkoutButtonsUI.css ? <style>{checkoutButtonsUI.css}</style> : ''
-          }
-          <div dangerouslySetInnerHTML={{ __html: checkoutButtonsUI.html }} />
+        <div onClick={wrapperClickHandler} style={{ position: "relative" }}>
+           {checkoutButtonsUI.css ? <style>{checkoutButtonsUI.css}</style> : ''}
+           <div
+            dangerouslySetInnerHTML={{ __html: checkoutButtonsUI.html }}
+            style={{ 
+              opacity: (buttonPending) ? 0.25 : 1,
+              transition: 'opacity 0.2s ease-in-out'
+            }}
+          />
+          {(buttonPending) && ( 
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 1,
+              }}
+            >
+              <CircleSpinner />
+            </div>
+          )} 
         </div>
       ) : (
         props.children

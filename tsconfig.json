@@ -16,5 +16,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "src/index.ts"]
+  "include": ["src", "src/index.ts", "src/svg.d.ts"]
 }
