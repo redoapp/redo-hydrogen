@@ -46,7 +46,7 @@ const getButtonsToShow = ({
         ui: json
       });
 
-      if(!ui) {
+      if (!ui) {
         return reject(null);
       }
 
@@ -118,12 +118,12 @@ const RedoCheckoutButtons = (props: {
 
   useEffect(() => {
     (async () => {
-      if(!redoCoverageClient.eligible || !cart || !redoCoverageClient.storeId) {
+      if (!redoCoverageClient.eligible || !cart || !redoCoverageClient.storeId) {
         return;
       }
 
       const buttons = await getButtonsToShow({ redoCoverageClient, cart, storeId: redoCoverageClient.storeId });
-      if(buttons) {
+      if (buttons) {
         setCheckoutButtonsUI(buttons);
       }
     })();
@@ -162,7 +162,7 @@ const RedoCheckoutButtons = (props: {
   const wrapperClickHandler = async (e: MouseEvent) => {
     let clickedElement = e.target as HTMLElement;
 
-    if(!clickedElement.dataset) {
+    if (!clickedElement.dataset) {
       return;
     }
 
@@ -183,7 +183,6 @@ const RedoCheckoutButtons = (props: {
         console.error('Failed to update coverage state:', error);
       }
       window.location.href = checkoutUrl;
-
     }
   };
 
