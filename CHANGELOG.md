@@ -1,3 +1,8 @@
+### 1.3.0
+
+ - Add a spinner visual after button clicked and navigating to cart
+ - Bugfixes and improved types for optimistic carts
+
 ### 1.2.2
 
  - Bugfixes
