@@ -16,7 +16,7 @@ interface RedoInfoModalProps {
     infoCardImageUrl?: string;
     infoModalLogoUrl?: string;
     infoModalImageUrl?: string;
-    modalContent?: ReactNode;
+    infoModalContent?: ReactNode;
 }
 
 const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalContent }: 
@@ -28,7 +28,7 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
     modalContent?: ReactNode;
 }) => {
     const [isBrowser, setIsBrowser] = useState(false);
-    
+
     useEffect(() => {
         setIsBrowser(true);
         
@@ -106,7 +106,6 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
                 alignItems: 'center',
                 justifyContent: 'left',
                 maxHeight: '95%',
-                height: 'calc(',  
                 boxShadow: '0 4px 8px 0 rgba(0, 0, 0, 0.2)',
                 opacity: 1,
                 transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out',
@@ -134,13 +133,13 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
                     <div className="redo-info-modal__sideImageContainer" style={{
                         minWidth: '200px',
                         width: '200px',
-                        height: 'auto',
+                        backgroundImage: `url(${infoModalImageUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center center',
+                        borderTopLeftRadius: '8px',
+                        borderBottomLeftRadius: '8px',
+                        alignSelf: 'stretch',
                     }}>
-                        <img src={infoModalImageUrl} className="redo-info-modal__sideImage" style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain',
-                        }} />
                     </div>  
                 ) : null}
                 {modalContent ? modalContent : (
@@ -245,8 +244,18 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
                         color: '#666',
                     }}>
                         By purchasing Redo, you agree and have read the{' '}
-                        <a href="https://www.getredo.com/privacy-policy" style={{ color: '#000', textDecoration: 'underline' }}>Privacy Policy</a> and{' '}
-                        <a href="https://www.getredo.com/terms-conditions" style={{ color: '#000', textDecoration: 'underline' }}>Terms and Conditions</a>.
+                        <a 
+                            href="https://www.getredo.com/privacy-policy" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            style={{ color: '#000', textDecoration: 'underline' }}
+                        >Privacy Policy</a> and{' '}
+                        <a 
+                            href="https://www.getredo.com/terms-conditions" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            style={{ color: '#000', textDecoration: 'underline' }}
+                        >Terms and Conditions</a>.
                         {' '}Redo is subject to Merchant's Return Policy.
                     </p>
                 </div>
@@ -268,7 +277,7 @@ const RedoInfoCard = ({
     infoCardImageUrl,
     infoModalLogoUrl,
     infoModalImageUrl,
-    modalContent,
+    infoModalContent,
 }: RedoInfoModalProps) => {
     const { price } = useRedoCoverageClient();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -280,6 +289,10 @@ const RedoInfoCard = ({
             setIsModalOpen(true);
         }
     };
+
+    if (price == null || price == undefined || price == 0) { 
+        return null;
+    }
 
     return (
         <>
@@ -390,7 +403,7 @@ const RedoInfoCard = ({
                     onClose={() => setIsModalOpen(false)}
                     infoModalLogoUrl={infoModalLogoUrl}
                     infoModalImageUrl={infoModalImageUrl}
-                    modalContent={modalContent}
+                    modalContent={infoModalContent}
                 />
             )}
         </>
