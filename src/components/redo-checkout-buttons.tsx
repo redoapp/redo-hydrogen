@@ -102,7 +102,6 @@ const findAncestor = (
 };
 
 const RedoCheckoutButtons = (props: {
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart;
   children?: ReactNode;
   onClick?: (enabled: boolean) => void;
 }) => {
