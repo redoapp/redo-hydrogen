@@ -69,14 +69,16 @@ const waitForConditionsMetOrTimeout = ({
 const addProductToCartIfNeeded = async ({
   cart,
   fetcher,
+  submit,
   waitCartIdle,
   cartInfoToEnable
 }: {
   cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined,
   fetcher: FetcherWithComponents<unknown>,
+  submit: any,
   waitCartIdle: WaitCartIdleCallback;
   cartInfoToEnable: CartInfoToEnable
-}) => {
+}): Promise<void> => {
   if(!cart) {
     return await addProductToCart({ cart, fetcher, waitCartIdle, cartInfoToEnable });
   }
@@ -95,8 +97,8 @@ const addProductToCartIfNeeded = async ({
   } else {
     let isSuccess = true;
 
-    await removeLinesFromCart({ cart, fetcher, waitCartIdle, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
-    await addProductToCart({ cart, fetcher, waitCartIdle, cartInfoToEnable });
+    await removeLinesFromCart({ cart, fetcher, submit, waitCartIdle, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
+    await addProductToCart({ cart, fetcher, submit, waitCartIdle, cartInfoToEnable });
 
     return;
   }
@@ -194,6 +196,7 @@ const addProductToCart = async ({
       },
       {method: 'POST', action: '/cart'},
     );
+    console.log("Product add await complete.")
   }
 };
 
@@ -209,7 +212,7 @@ const setCartRedoEnabledAttribute = async ({
   waitCartIdle: WaitCartIdleCallback;
   cartInfoToEnable: CartInfoToEnable | null;
   enabled: boolean;
-}) => {
+}): Promise<void> => {
   const redoCartAttribute = {
     key: cartInfoToEnable?.cartAttribute || DEFAULT_REDO_ENABLED_CART_ATTRIBUTE,
     value: enabled.toString()
@@ -234,6 +237,7 @@ const setCartRedoEnabledAttribute = async ({
       },
       {method: 'POST', action: '/cart'},
     );
+    console.log('Set cart attribute await complete.')
   }
 };
 
@@ -259,6 +263,7 @@ function useFetcherWithPromise<TData = AppData>(opts?: Parameters<typeof useFetc
 
   const submit = React.useCallback(
     async (...args: Parameters<typeof fetcher.submit>) => {
+      console.log('Fetcher submitted');
       fetcher.submit(...args);
       return promiseRef.current
     },
@@ -268,6 +273,7 @@ function useFetcherWithPromise<TData = AppData>(opts?: Parameters<typeof useFetc
   React.useEffect(() => {
     if (fetcher.state === 'idle') {
       if (fetcher.data) {
+        console.log('Cart fetcher type - idle.')
         resolveRef.current?.(fetcher.data)
       }
       resetResolver()
@@ -283,8 +289,8 @@ type WaitCartIdleCallback = () => Promise<CartReturn | CartWithActionsDocs | Opt
 // It returns a function, which returns a promise, which will resolve once the cart value passed in reaches an idle state.
 // Not intended for use with CartReturn, but will accept that value if passed in to avoid breaking rules of hooks
 const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined) => {
-  const resolveRef = useRef<any>(null)
-  const promiseRef = useRef<any>(null)
+  const resolveRef = useRef<any>(null);
+  const promiseRef = useRef<any>(null);
 
   if (!promiseRef.current) {
     promiseRef.current = new Promise<CartReturn | CartWithActionsDocs | OptimisticCart>((resolve) => {
@@ -311,10 +317,12 @@ const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | OptimisticCart
     }
     if(!isCartWithActionsDocs(cart)) {
       // Wrong type of cart. Just resolve.
+      console.log("Not cart with actions.");
       resolveRef.current?.(cart);
       resetResolver();
     } else if(cart.status === 'idle') {
-      resolveRef.current?.(cart)
+      resolveRef.current?.(cart);
+      console.log("Cart actions type - idle.");
       resetResolver();
     }
   }, [cart, resetResolver]);

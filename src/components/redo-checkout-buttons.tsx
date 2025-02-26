@@ -139,17 +139,19 @@ const RedoCheckoutButtons = (props: {
       return;
     }
 
-    setButtonPending(true);
+    // setButtonPending(true);
     try {
-      const functionToCall = isCoverage ? redoCoverageClient.enable : redoCoverageClient.disable;
-      const result = await executeWithTimeout(
-        functionToCall(),
-        TIMEOUT_FOR_CHECKOUTS
-      );
+      // const functionToCall = isCoverage ? redoCoverageClient.enable : redoCoverageClient.disable;
+      // const result = await executeWithTimeout(
+      //   functionToCall(),
+      //   TIMEOUT_FOR_CHECKOUTS
+      // );
       
-      if (props.onClick) {
-        await props.onClick(result);
-      }
+      // if (props.onClick) {
+      //   await props.onClick(result);
+      // }
+      console.log('✅ 517')
+      await redoCoverageClient.enable();
     } catch (e) {
       console.error(e);
     } finally {

@@ -1,4 +1,4 @@
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useFetchers, useSubmit } from "@remix-run/react";
 import { CartReturn, OptimisticCart } from "@shopify/hydrogen";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient, RedoError, RedoErrorType } from "../types";
@@ -141,7 +141,11 @@ const RedoProvider = ({
 const useRedoCoverageClient = (): RedoCoverageClient => {
   const redoContext = useContext(RedoContext);
   const fetcher = useFetcherWithPromise();
+  const submit = useSubmit();
+  const fetchers = useFetchers();
   const waitCartIdle = useWaitCartIdle(redoContext.cart);
+
+  console.log(`Fetchers: ${JSON.stringify(fetchers, null, 2)}`);
 
   useEffect(() => {
     if(redoContext.loading || !redoContext.cartInfoToEnable) {
@@ -160,21 +164,87 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       if(redoContext.loading || !redoContext.cartInfoToEnable) {
         return false;
       }
-      await Promise.allSettled([
-        addProductToCartIfNeeded({
-          fetcher,
-          waitCartIdle,
-          cart: redoContext.cart,
-          cartInfoToEnable: redoContext.cartInfoToEnable,
-        }),
-        setCartRedoEnabledAttribute({
-          cart: redoContext.cart,
-          fetcher,
-          waitCartIdle,
-          cartInfoToEnable: redoContext.cartInfoToEnable,
-          enabled: true
-        })
+      // await Promise.allSettled([
+      //   await (async () => {
+      //     if(!redoContext.cartInfoToEnable) {
+      //       console.log('⚠️ Missing cart info to enable. (product)');
+      //     }
+          
+      //     await addProductToCartIfNeeded({
+      //       fetcher,
+      //       waitCartIdle,
+      //       cart: redoContext.cart,
+      //       cartInfoToEnable: redoContext.cartInfoToEnable,
+      //     });
+
+      //     console.log('Ensure product complete.');
+      //     return;
+      //   })(),
+      //   await (async () => {
+      //     if(!redoContext.cartInfoToEnable) {
+      //       console.log('⚠️ Missing cart info to enable. (attributes');
+      //     }
+
+      //     await setCartRedoEnabledAttribute({
+      //       cart: redoContext.cart,
+      //       fetcher,
+      //       waitCartIdle,
+      //       cartInfoToEnable: redoContext.cartInfoToEnable,
+      //       enabled: true
+      //     });
+
+      //     console.log('Ensure attributes complete.');
+      //     return;
+      //   })()
+      // ]);
+      
+      // Doesn't work unless awaited
+      // await Promise.allSettled([  
+      //   (async () => await addProductToCartIfNeeded({
+      //     fetcher,
+      //     waitCartIdle,
+      //     cart: redoContext.cart,
+      //     cartInfoToEnable: redoContext.cartInfoToEnable,
+      //   }))(),
+      //   (async () => await setCartRedoEnabledAttribute({
+      //     cart: redoContext.cart,
+      //     fetcher,
+      //     waitCartIdle,
+      //     cartInfoToEnable: redoContext.cartInfoToEnable,
+      //     enabled: true
+      //   }))()
+      // ]);
+
+      let addProductToCartResult = addProductToCartIfNeeded({
+        fetcher,
+        submit,
+        waitCartIdle,
+        cart: redoContext.cart,
+        cartInfoToEnable: redoContext.cartInfoToEnable,
+      });
+      let setAttributeResult = setCartRedoEnabledAttribute({
+        cart: redoContext.cart,
+        submit,
+        fetcher,
+        waitCartIdle,
+        cartInfoToEnable: redoContext.cartInfoToEnable,
+        enabled: true
+      });
+
+      console.log(`typeof add product result: ${typeof addProductToCartResult} (${JSON.stringify(addProductToCartResult, null, 2)})`);
+      console.log(`typeof add attribute result: ${typeof addProductToCartResult} (${JSON.stringify(addProductToCartResult, null, 2)})`);
+
+      let bothPromiseResults = Promise.allSettled([
+        addProductToCartIfNeeded,
+        setAttributeResult
       ]);
+
+      console.log(`typeof both promise results ${typeof bothPromiseResults} (${JSON.stringify(bothPromiseResults, null, 2)})`);
+
+      let awaitedResults = await bothPromiseResults;
+
+      console.log(`typeof awaited both promise results ${typeof awaitedResults} (${JSON.stringify(awaitedResults, null, 2)})`);
+
       return true;
     },
     disable: async () => {
@@ -182,19 +252,19 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
         return false;
       }
       await Promise.allSettled([
-        removeProductFromCartIfNeeded({
+        (async () => await removeProductFromCartIfNeeded({
           fetcher,
           waitCartIdle,
           cart: redoContext.cart,
           cartInfoToEnable: redoContext.cartInfoToEnable
-        }),
-        setCartRedoEnabledAttribute({
+        }))(),
+        (async () => await setCartRedoEnabledAttribute({
           cart: redoContext.cart,
           fetcher,
           waitCartIdle,
           cartInfoToEnable: redoContext.cartInfoToEnable,
           enabled: false
-        })
+        }))()
       ]);
       return true;
     },

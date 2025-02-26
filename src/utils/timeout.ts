@@ -6,7 +6,10 @@ export async function executeWithTimeout<T, E extends Error>(
   return Promise.race([
     promise,
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(error), timeoutMs),
+      setTimeout(() => {
+        console.log('Timeout hit!');
+        reject(error)
+      }, timeoutMs),
     ),
   ]);
 }
