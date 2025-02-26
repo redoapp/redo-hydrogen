@@ -40,26 +40,26 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
             ${slideOutKeyframes}
             
             @media (max-width: 768px) {
-                .redo-modal-container {
+                .redo-info-modal__container {
                     flex-direction: column !important;
                     align-items: stretch !important;
                     overflow: auto !important;
                     width: 95% !important;
                 }
                 
-                .redo-modal-image {
+                .redo-info-modal__sideImageContainer {
                     width: 100% !important;
                     min-width: unset !important;
                     max-height: 140px !important;
                     overflow: hidden !important;
                 }
                 
-                .redo-modal-image img {
+                .redo-info-modal__sideImageContainer img {
                     height: 140px !important;
                     max-height: 140px !important;
                 }
                 
-                .redo-modal-content {
+                .redo-info-modal__contentContainer {
                     width: 100% !important;
                     box-sizing: border-box !important;
                 }
@@ -72,7 +72,7 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
         };
     }, []);
 
-    if (!open) return null;
+    if (!open) return <></>;
 
     const fullModalContent = (
         <div  className="redo-info-modal__backgroundContainer" style={{
@@ -265,7 +265,7 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
     );
 
     if (!isBrowser) {
-        return null;
+        return <></>;
     }
 
     return createPortal(fullModalContent, document.body);
@@ -291,7 +291,7 @@ const RedoInfoCard = ({
     };
 
     if (!eligible) { 
-        return null;
+        return <></>;
     }
 
     return (
