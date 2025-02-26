@@ -1,116 +1,440 @@
-import { ReactNode, useState } from "react";
-import InfoIcon from "./info.svg";
-import ShieldIcon from "./shield-tick.svg";
+import { ReactNode, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import InfoIcon from "./icons/info.svg";
+import ShieldIcon from "./icons/shield-tick.svg";
 import { useRedoCoverageClient } from "../providers/redo-coverage-client";
+import FeaturedPackageCheckIcon from "./icons/featured-package-check.svg";
+import FeaturedLaptopIcon from "./icons/featured-laptop-2.svg";
+import FeaturedRefreshIcon from "./icons/featured-refresh-cw-3.svg";
+import RedoLogo from "./icons/logo.svg";
+import CloseIcon from "./icons/modal-close-button.svg"
+
 
 interface RedoInfoModalProps {
-  showInfoIcon?: boolean;
-  onInfoClick?: () => void;
-  fallbackIcon?: ReactNode;
+    showInfoIcon?: boolean;
+    onInfoClick?: () => void;
+    infoCardImageUrl?: string;
+    infoModalLogoUrl?: string;
+    infoModalImageUrl?: string;
+    modalContent?: ReactNode;
 }
 
-const RedoInfoModal = ({ 
-  showInfoIcon = true, 
-  onInfoClick = () => {}, 
-  fallbackIcon
-}: RedoInfoModalProps) => {
-    const { price } = useRedoCoverageClient();
+const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalContent }: 
+{ 
+    open: boolean; 
+    onClose: () => void; 
+    infoModalLogoUrl?: string; 
+    infoModalImageUrl?: string;
+    modalContent?: ReactNode;
+}) => {
+    const [isBrowser, setIsBrowser] = useState(false);
 
-    return (
-        <div className="redo-info-modal" data-target="info-card-container" style={{
+    useEffect(() => {
+        setIsBrowser(true);
+        
+        // Add animations and responsive styles
+        const styleTag = document.createElement('style');
+        styleTag.innerHTML = `
+            ${fadeInKeyframes}
+            ${slideInKeyframes}
+            ${slideOutKeyframes}
+            
+            @media (max-width: 768px) {
+                .redo-modal-container {
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                    overflow: auto !important;
+                    width: 95% !important;
+                }
+                
+                .redo-modal-image {
+                    width: 100% !important;
+                    min-width: unset !important;
+                    max-height: 140px !important;
+                    overflow: hidden !important;
+                }
+                
+                .redo-modal-image img {
+                    height: 140px !important;
+                    max-height: 140px !important;
+                }
+                
+                .redo-modal-content {
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                }
+            }
+        `;
+        document.head.appendChild(styleTag);
+
+        return () => {
+            styleTag.remove();
+        };
+    }, []);
+
+    if (!open) return null;
+
+    const fullModalContent = (
+        <div  className="redo-info-modal__backgroundContainer" style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
             display: 'flex',
-            backgroundColor: '#f0f0f0',
-            borderRadius: '4px',
-            padding: '12px',
             alignItems: 'center',
-            gap: '12px',
-            marginTop: '8px'
-        }}>
-            <div className="redo-info-modal__imageContainer" style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '100%',
+            justifyContent: 'center',
+            zIndex: 99999,
+            transform: 'translateZ(0)',
+            opacity: 1,
+            transition: 'opacity 0.2s ease-in-out',
+            animation: 'fadeIn 0.2s ease-in-out'
+        }} onClick={onClose}>
+            <div className="redo-info-modal__container" style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                width: '700px',
+                maxWidth: '900px',
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 100000,
                 display: 'flex',
-                justifyContent: 'center',
+                flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#f0f0f0',
-                flexShrink: 0,
-                padding: '4px'
-            }}>
-                <ShieldIcon style={{
-                    width: '100%',
-                    height: '100%',
-                    color: 'black',
-                    display: 'block',
-                    viewBox: '0 0 24 24',
-                }}/>
-            </div>
-            
-            <div className="redo-info-modal__content" data-target="text-and-buttons-container" style={{
-                flex: 1
-            }}>
-                <div className="redo-info-modal__textWrapper" style={{
-                    display: 'flex',
-                    flexDirection: 'column',
+                justifyContent: 'center',
+                maxHeight: '95%',
+                height: 'calc(',  
+                boxShadow: '0 4px 8px 0 rgba(0, 0, 0, 0.2)',
+                opacity: 1,
+                transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out',
+                animation: 'slideIn 0.2s ease-in-out forwards',
+            }} onClick={e => e.stopPropagation()}>
+            {modalContent ? modalContent : (
+                <>
+                    <button
+                        className="redo-info-modal__closeButton"
+                        onClick={onClose}
+                        style={{
+                        position: 'absolute',
+                        right: '16px',
+                        top: '16px',
+                        border: 'none',
+                        background: 'none',
+                        fontSize: '20px',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        zIndex: 1
+                    }}
+                >
+                    <CloseIcon />
+                </button>
+                {infoModalImageUrl ? (
+                    <div className="redo-info-modal__sideImageContainer" style={{
+                        minWidth: '200px',
+                        width: '200px',
+                        height: 'auto',
+                    }}>
+                        <img src={infoModalImageUrl} className="redo-info-modal__sideImage" style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                        }} />
+                    </div>  
+                ) : null}
+                <div className="redo-info-modal__contentContainer" style={{
+                    padding: '24px',
+                    fontFamily: 'Inter, "Helvetica Neue", Arial, sans-serif',
                 }}>
-                    <span className="redo-info-modal__label" data-target="toggle-label" style={{
-                        color: '#000000',
+                    <div className="redo-info-modal__logoContainer" style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'block',
+                    }}>
+                        {infoModalLogoUrl ? (
+                            <img src={infoModalLogoUrl} className="redo-info-modal__logo" style={{
+                                width: 'auto',
+                                height: '112px',
+                                display: 'block'
+                            }}/>
+                        ) : <RedoLogo width="112px" height="112px" display="block"/>}
+                    </div>
+                    <p style={{ 
+                        fontSize: '20px', 
+                        fontWeight: '600'
+                    }} className="redo-info-modal__title">
+                        Checkout with confidence
+                    </p>
+                    
+                    <p style={{ 
                         fontSize: '14px',
-                        fontWeight: 600,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        verticalAlign: 'middle'
-                    }}>
-                        Checkout+
-                        {showInfoIcon && (
-                            <span className="redo-info-modal__infoIconWrapper" data-target="toggle-info">
-                                <button
-                                    className="redo-info-modal__infoButton"
-                                    data-target="toggle-info-button"
-                                    onClick={onInfoClick}
-                                    type="button"
-                                    style={{
-                                        border: 'none',
-                                        background: 'none',
-                                        padding: 0,
-                                        cursor: 'pointer',
-                                        color: '#969696',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
-                                >
-                                    <InfoIcon 
-                                        style={{
-                                            width: '16px',
-                                            height: '16px',
-                                            verticalAlign: 'middle'
-                                        }}
-                                    />
-                                </button>
-                            </span>
-                        )}
-                    </span>
-                    <span className="redo-info-modal__description" data-target="toggle-subtext" style={{
-                        color: '#000000',
+                        color: '#666',
+                        marginBottom: '24px'
+                    }} className="redo-info-modal__description">
+                        Shop with confidence, knowing your purchases are protected every step of the way.
+                    </p>
+
+                    <div className="redo-info-modal__benefitsContainer" style={{ marginBottom: '24px' }}>
+                        <div className="redo-info-modal__benefit" style={{ marginBottom: '16px' }}>
+                            <div className="redo-info-modal__benefitIconContainer" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start', gap: '10px' }}>
+                                <div className="redo-info-modal__benefitIcon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px' }}>
+                                    <FeaturedRefreshIcon height="32" width="32" />
+                                </div>
+                                <div className="redo-info-modal__benefitTextContainer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    <p className="redo-info-modal__benefitText" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>
+                                        Free returns & exchanges
+                                    </p>
+                                    <p className="redo-info-modal__benefitSmallText" style={{ fontSize: '12px', color: '#666' }}>
+                                        Return or exchange your items for free. If you're not completely satisfied, we've got you covered.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="redo-info-modal__benefit" style={{ marginBottom: '16px' }}>
+                            <div className="redo-info-modal__benefitIconContainer" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '10px' }}>
+                                <div className="redo-info-modal__benefitIcon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px' }}>
+                                    <FeaturedPackageCheckIcon height="32" width="32" />
+                                </div>
+                                <div className="redo-info-modal__benefitTextContainer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    <p className="redo-info-modal__benefitText" style={{ 
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        marginBottom: '4px'
+                                    }}>
+                                        Package protection
+                                    </p>
+                                    <p className="redo-info-modal__benefitSmallText" style={{ 
+                                        fontSize: '12px',
+                                        color: '#666'
+                                    }}>
+                                        Rest assured, if your package is lost, stolen, or damaged, we've got you covered.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="redo-info-modal__benefit" style={{ marginBottom: '16px' }}>
+                            <div className="redo-info-modal__benefitIconContainer" style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '10px' }}>
+                                <div className="redo-info-modal__benefitIcon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px' }}>
+                                    <FeaturedLaptopIcon height="32" width="32" />
+                                </div>
+                                <div className="redo-info-modal__benefitTextContainer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    <p className="redo-info-modal__benefitText" style={{ 
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        marginBottom: '4px'
+                                    }}>
+                                        Easy return portal
+                                    </p>
+                                    <p className="redo-info-modal__benefitSmallText" style={{ 
+                                        fontSize: '12px',
+                                        color: '#666'
+                                    }}> 
+                                        Skip all the back and forth, and submit your return in a few clicks.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p className="redo-info-modal__footerText" style={{ 
                         fontSize: '12px',
-                        lineHeight: '16px'
+                        color: '#666',
                     }}>
-                        Free Returns + Package Protection
-                    </span>
+                        By purchasing Redo, you agree and have read the{' '}
+                        <a href="https://www.getredo.com/privacy-policy" style={{ color: '#000', textDecoration: 'underline' }}>Privacy Policy</a> and{' '}
+                        <a href="https://www.getredo.com/terms-conditions" style={{ color: '#000', textDecoration: 'underline' }}>Terms and Conditions</a>.
+                        {' '}Redo is subject to Merchant's Return Policy.
+                    </p>
                 </div>
-            </div>
-            
-            <div className="redo-info-modal__priceContainer" style={{
-                color: '#000000',
-                fontSize: '14px',
-                fontWeight: 400,
-            }}>
-                <span className="redo-info-modal__price" data-target="price">${price}</span>
+                </>
+                )}
             </div>
         </div>
     );
+
+    if (!isBrowser) {
+        return null;
+    }
+
+    return createPortal(fullModalContent, document.body);
 };
 
-export { RedoInfoModal };
+const RedoInfoCard = ({ 
+    showInfoIcon = true, 
+    onInfoClick,
+    infoCardImageUrl,
+    infoModalLogoUrl,
+    infoModalImageUrl,
+    modalContent,
+}: RedoInfoModalProps) => {
+    const { price } = useRedoCoverageClient();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleInfoClick = () => {
+        if (onInfoClick) {
+            onInfoClick();
+        } else {
+            setIsModalOpen(true);
+        }
+    };
+
+    return (
+        <>
+            <div className="redo-info-card__container" data-target="info-card-container" style={{
+                display: 'flex',
+                backgroundColor: '#f0f0f0',
+                borderRadius: '4px',
+                padding: '12px',
+                alignItems: 'center',
+                gap: '12px',
+                marginTop: '8px'
+            }}>
+                <div className="redo-info-card__imageContainer" style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: '#f0f0f0',
+                    flexShrink: 0,
+                }}>
+                    {infoCardImageUrl ? (
+                        <img src={infoCardImageUrl} alt="Redo Info" className="redo-info-card__image" style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain'
+                        }} />
+                    ) : (
+                        <ShieldIcon style={{
+                            width: '100%',
+                            height: '100%',
+                            color: 'black',
+                            display: 'block',
+                            viewBox: '0 0 24 24',
+                        }}/>
+                    )}
+                </div>
+                
+                <div className="redo-info-card__content" data-target="text-and-buttons-container" style={{
+                    flex: 1
+                }}>
+                    <div className="redo-info-card__textWrapper" style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                    }}>
+                        <span className="redo-info-card__title" data-target="toggle-label" style={{
+                            color: '#000000',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            verticalAlign: 'middle'
+                        }}>
+                            Checkout+
+                            {showInfoIcon && (
+                                <span className="redo-info-card__infoIconWrapper" data-target="toggle-info">
+                                    <button
+                                        className="redo-info-card__infoButton"
+                                        data-target="toggle-info-button"
+                                        onClick={handleInfoClick}
+                                        type="button"
+                                        style={{
+                                            border: 'none',
+                                            background: 'none',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                            color: '#969696',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <InfoIcon 
+                                            style={{
+                                                width: '16px',
+                                                height: '16px',
+                                                verticalAlign: 'middle'
+                                            }}
+                                        />
+                                    </button>
+                                </span>
+                            )}
+                        </span>
+                        <p className="redo-info-card__subtext" data-target="toggle-subtext" style={{
+                            color: '#000000',
+                            fontSize: '12px',
+                            lineHeight: '16px'
+                        }}>
+                            Free Returns + Package Protection
+                        </p>
+                    </div>
+                </div>
+                
+                <div className="redo-info-card__priceContainer">
+                    <p  style={{
+                    color: '#000000',
+                    fontSize: '14px',
+                    fontWeight: 400,
+                }} className="redo-info-card__price" data-target="price">${price}</p>
+                </div>
+            </div>
+            
+            {!onInfoClick && (
+                <Modal
+                    open={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    infoModalLogoUrl={infoModalLogoUrl}
+                    infoModalImageUrl={infoModalImageUrl}
+                    modalContent={modalContent}
+                />
+            )}
+        </>
+    );
+};
+
+const fadeInKeyframes = `
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+`;
+
+const slideInKeyframes = `
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -48%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+`;
+
+const slideOutKeyframes = `
+    @keyframes slideOut {
+        from {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -48%);
+        }
+    }
+`;
+
+
+
+export { RedoInfoCard };
