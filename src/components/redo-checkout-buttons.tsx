@@ -1,5 +1,9 @@
 import React, { MouseEvent, ReactNode, useEffect, useState } from "react";
-import { CartForm, CartActionInput, CartReturn, OptimisticCart } from "@shopify/hydrogen";
+import {
+  CartForm,
+  CartActionInput,
+  CartReturn,
+} from "@shopify/hydrogen";
 import { useRedoCoverageClient } from "../providers/redo-coverage-client";
 import { CartInfoToEnable, RedoCoverageClient } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
@@ -21,7 +25,7 @@ const getButtonsToShow = ({
   storeId
 }: {
   redoCoverageClient: RedoCoverageClient,
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart,
+  cart: CartReturn | CartWithActionsDocs,
   storeId: string;
 }): Promise<CheckoutButtonUIResponse | null> => {
   return new Promise<CheckoutButtonUIResponse | null>((resolve, reject) => {
@@ -61,7 +65,7 @@ const applyButtonVariables = ({
   ui
 }: {
   redoCoverageClient: RedoCoverageClient,
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart,
+  cart: CartReturn | CartWithActionsDocs,
   ui: CheckoutButtonUIResponse
 }): CheckoutButtonUIResponse | null => {
   if (!redoCoverageClient.eligible || !redoCoverageClient.price || !cart?.cost) {
@@ -102,7 +106,7 @@ const findAncestor = (
 };
 
 const RedoCheckoutButtons = (props: {
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart;
+  cart: CartReturn | CartWithActionsDocs;
   children?: ReactNode;
   onClick?: (enabled: boolean) => void;
 }) => {
