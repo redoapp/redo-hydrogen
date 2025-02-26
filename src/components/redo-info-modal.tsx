@@ -279,7 +279,7 @@ const RedoInfoCard = ({
     infoModalImageUrl,
     infoModalContent,
 }: RedoInfoModalProps) => {
-    const { price } = useRedoCoverageClient();
+    const { price, eligible } = useRedoCoverageClient();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleInfoClick = () => {
@@ -290,7 +290,7 @@ const RedoInfoCard = ({
         }
     };
 
-    if (price == null || price == undefined || price == 0) { 
+    if (!eligible) { 
         return null;
     }
 
