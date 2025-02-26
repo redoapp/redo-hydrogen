@@ -1,3 +1,7 @@
+### 1.3.1
+
+ - Remove unused prop from CheckoutButtons
+
 ### 1.3.0
 
  - Add a spinner visual after button clicked and navigating to cart
