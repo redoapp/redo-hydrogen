@@ -3,7 +3,7 @@ import { RedoCheckoutButtons } from "./components/redo-checkout-buttons";
 import { REDO_REQUIRED_HOSTNAMES } from "./utils/security";
 import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient, RedoError, RedoErrorType } from "./types";
 import { LoadState, Loader, useLoad } from './utils/react-utils'
-import { RedoInfoModal } from "./components/redo-info-modal";
+import { RedoInfoCard } from "./components/redo-info-modal";
 
 export {
   RedoCheckoutButtons,
@@ -12,7 +12,7 @@ export {
   useLoad,
   REDO_REQUIRED_HOSTNAMES,
   RedoErrorType,
-  RedoInfoModal
+  RedoInfoCard
 };
 
 export type {
