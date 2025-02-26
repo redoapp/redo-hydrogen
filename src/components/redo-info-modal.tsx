@@ -28,7 +28,7 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
     modalContent?: ReactNode;
 }) => {
     const [isBrowser, setIsBrowser] = useState(false);
-
+    
     useEffect(() => {
         setIsBrowser(true);
         
@@ -104,16 +104,15 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'left',
                 maxHeight: '95%',
                 height: 'calc(',  
                 boxShadow: '0 4px 8px 0 rgba(0, 0, 0, 0.2)',
                 opacity: 1,
                 transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out',
                 animation: 'slideIn 0.2s ease-in-out forwards',
+                minHeight: '100px',
             }} onClick={e => e.stopPropagation()}>
-            {modalContent ? modalContent : (
-                <>
                     <button
                         className="redo-info-modal__closeButton"
                         onClick={onClose}
@@ -144,6 +143,7 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
                         }} />
                     </div>  
                 ) : null}
+                {modalContent ? modalContent : (
                 <div className="redo-info-modal__contentContainer" style={{
                     padding: '24px',
                     fontFamily: 'Inter, "Helvetica Neue", Arial, sans-serif',
@@ -250,7 +250,6 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
                         {' '}Redo is subject to Merchant's Return Policy.
                     </p>
                 </div>
-                </>
                 )}
             </div>
         </div>
