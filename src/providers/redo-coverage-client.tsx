@@ -160,42 +160,38 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       if(redoContext.loading || !redoContext.cartInfoToEnable) {
         return false;
       }
-      await Promise.allSettled([
-        addProductToCartIfNeeded({
-          fetcher,
-          waitCartIdle,
-          cart: redoContext.cart,
-          cartInfoToEnable: redoContext.cartInfoToEnable,
-        }),
-        setCartRedoEnabledAttribute({
-          cart: redoContext.cart,
-          fetcher,
-          waitCartIdle,
-          cartInfoToEnable: redoContext.cartInfoToEnable,
-          enabled: true
-        })
-      ]);
+      let addProductResult = await addProductToCartIfNeeded({
+        fetcher,
+        waitCartIdle,
+        cart: redoContext.cart,
+        cartInfoToEnable: redoContext.cartInfoToEnable,
+      });
+      await setCartRedoEnabledAttribute({
+        cart: redoContext.cart,
+        fetcher,
+        waitCartIdle,
+        cartInfoToEnable: redoContext.cartInfoToEnable,
+        enabled: true
+      });
       return true;
     },
     disable: async () => {
       if(!redoContext.cartInfoToEnable) {
         return false;
       }
-      await Promise.allSettled([
-        removeProductFromCartIfNeeded({
-          fetcher,
-          waitCartIdle,
-          cart: redoContext.cart,
-          cartInfoToEnable: redoContext.cartInfoToEnable
-        }),
-        setCartRedoEnabledAttribute({
-          cart: redoContext.cart,
-          fetcher,
-          waitCartIdle,
-          cartInfoToEnable: redoContext.cartInfoToEnable,
-          enabled: false
-        })
-      ]);
+      await removeProductFromCartIfNeeded({
+        fetcher,
+        waitCartIdle,
+        cart: redoContext.cart,
+        cartInfoToEnable: redoContext.cartInfoToEnable
+      });
+      await setCartRedoEnabledAttribute({
+        cart: redoContext.cart,
+        fetcher,
+        waitCartIdle,
+        cartInfoToEnable: redoContext.cartInfoToEnable,
+        enabled: false
+      });
       return true;
     },
     get loading() {
