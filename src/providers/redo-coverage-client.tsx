@@ -1,4 +1,4 @@
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useLocation } from "@remix-run/react";
 import { CartReturn, OptimisticCart } from "@shopify/hydrogen";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient, RedoError, RedoErrorType } from "../types";
@@ -22,11 +22,11 @@ const RedoProvider = ({
   storeId: string,
   children: ReactNode,
 }): ReactNode => {
-  const [cartProduct, setCartProduct] = useState();
-  const [cartAttribute, setCartAttribute] = useState<CartAttributeKey>();
   const [cartInfoToEnable, setCartInfoToEnable] = useState<CartInfoToEnable>();
   const [loading, setLoading] = useState<boolean>(true);
   const [errors, setErrors] = useState<RedoError[]>([]);
+
+  console.log(`Cart length: ${getCartLines(cart).length}`);
 
   const logUniqueError = (newError: RedoError) => {
     if(errors.find((err) => err.type === newError.type)) {
@@ -142,17 +142,24 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
   const redoContext = useContext(RedoContext);
   const fetcher = useFetcherWithPromise();
   const waitCartIdle = useWaitCartIdle(redoContext.cart);
+  const checkoutRedirectPending = useState<boolean>(false);
+  const location = useLocation();
+
+  if(!redoContext?.cart) {
+    console.log('[redoProvider] No cart length');
+  } else {
+    console.log(`[redoProvider] Cart length: ${getCartLines(redoContext.cart).length}`);
+  }
 
   useEffect(() => {
-    if(redoContext.loading) {
-      return;
-    }
     removeProductFromCartIfNeeded({
       cart: redoContext.cart,
       fetcher,
       waitCartIdle
     });
-  }, [redoContext.loading]);
+  }, [location.pathname]);
+
+  // console.log(JSON.stringify(location, null, 2));
   
   return {
     enable: async () => {
