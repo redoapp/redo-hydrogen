@@ -429,4 +429,4 @@ const slideInKeyframes = `
 
 
 
-export { RedoInfoModal };
+export { RedoInfoCard };
