@@ -1,3 +1,7 @@
+### 1.4.2
+
+ - Fix Hydrogen mismatched deps
+
 ### 1.4.1
 
  - Allow older and newer versions of Hydrogen
