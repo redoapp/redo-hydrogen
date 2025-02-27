@@ -1,3 +1,7 @@
+### 1.4.0
+
+ - Add InfoCard
+
 ### 1.3.1
 
  - Remove unused prop from CheckoutButtons
