@@ -291,7 +291,6 @@ const RedoInfoCard = ({
         <>
             <div className="redo-info-card__container" data-target="info-card-container" style={{
                 display: 'flex',
-                backgroundColor: '#f0f0f0',
                 borderRadius: '4px',
                 padding: '12px',
                 alignItems: 'center',
@@ -305,7 +304,6 @@ const RedoInfoCard = ({
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    backgroundColor: '#f0f0f0',
                     flexShrink: 0,
                 }}>
                     {infoCardImageUrl ? (
