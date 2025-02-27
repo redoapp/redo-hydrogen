@@ -365,6 +365,7 @@ const RedoInfoCard = ({
                                                 height: '16px',
                                                 verticalAlign: 'middle'
                                             }}
+                                            className="redo-info-card__infoIcon"
                                         />
                                     </button>
                                 </span>
