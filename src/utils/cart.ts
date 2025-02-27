@@ -136,11 +136,13 @@ const removeLinesFromCart = async ({
 const removeProductFromCartIfNeeded = async ({
   cart,
   fetcher,
-  waitCartIdle
+  waitCartIdle,
+  cartInfoToEnable
 }: {
   cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined,
   fetcher: FetcherWithComponents<unknown>,
   waitCartIdle: WaitCartIdleCallback
+  cartInfoToEnable: CartInfoToEnable
 }) => {
   if(!cart) {
     console.error('No cart');
