@@ -144,14 +144,13 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
   const waitCartIdle = useWaitCartIdle(redoContext.cart);
 
   useEffect(() => {
-    if(redoContext.loading || !redoContext.cartInfoToEnable) {
+    if(redoContext.loading) {
       return;
     }
     removeProductFromCartIfNeeded({
       cart: redoContext.cart,
       fetcher,
-      waitCartIdle,
-      cartInfoToEnable: redoContext.cartInfoToEnable
+      waitCartIdle
     });
   }, [redoContext.loading]);
   
@@ -182,8 +181,7 @@ const useRedoCoverageClient = (): RedoCoverageClient => {
       await removeProductFromCartIfNeeded({
         fetcher,
         waitCartIdle,
-        cart: redoContext.cart,
-        cartInfoToEnable: redoContext.cartInfoToEnable
+        cart: redoContext.cart
       });
       await setCartRedoEnabledAttribute({
         cart: redoContext.cart,
