@@ -1,3 +1,8 @@
+### 1.4.1
+
+ - Allow older and newer versions of Hydrogen
+ - Change default background color of modal to white
+
 ### 1.4.0
 
  - Add InfoCard
