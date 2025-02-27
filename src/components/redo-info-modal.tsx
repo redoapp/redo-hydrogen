@@ -148,12 +148,13 @@ const Modal = ({ open, onClose, infoModalLogoUrl, infoModalImageUrl, modalConten
                         width: '100%',
                         height: '100%',
                         display: 'block',
+                        marginBottom: '8px'
                     }}>
                         {infoModalLogoUrl ? (
                             <img src={infoModalLogoUrl} className="redo-info-modal__logo" style={{
                                 width: 'auto',
                                 height: '112px',
-                                display: 'block'
+                                display: 'block',
                             }}/>
                         ) : <RedoLogo width="112px" height="112px" display="block"/>}
                     </div>
