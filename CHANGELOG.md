@@ -1,3 +1,7 @@
+### 1.4.3
+
+ - Append redo opted in attributes to cart attributes instead of replacing
+
 ### 1.4.2
 
  - Fix Hydrogen mismatched deps
