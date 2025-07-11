@@ -215,17 +215,28 @@ const setCartRedoEnabledAttribute = async ({
     value: enabled.toString()
   };
 
+  const existingAttributes = cart?.attributes || [];
+  
+  const existingAttributesMap = new Map(
+    existingAttributes.map(attr => [attr.key, attr.value])
+  );
+  
+  existingAttributesMap.set(redoCartAttribute.key, redoCartAttribute.value);
+  
+  const updatedAttributes = Array.from(existingAttributesMap.entries()).map(([key, value]) => ({
+    key,
+    value: value ?? ""
+  }));
+
   const formInput = {
     action: CartForm.ACTIONS.AttributesUpdateInput,
     inputs: {
-      attributes: [
-        redoCartAttribute
-      ]
+      attributes: updatedAttributes
     }
   }
 
   if(cart && isCartWithActionsDocs(cart)) {
-    cart.cartAttributesUpdate([redoCartAttribute]);
+    cart.cartAttributesUpdate(updatedAttributes);
     await waitCartIdle();
   } else {
     await fetcher.submit(
