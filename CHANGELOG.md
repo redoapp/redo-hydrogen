@@ -1,3 +1,7 @@
+### 1.4.4
+
+ - Bugfix: remove InfoModal using relative parent not document.head
+
 ### 1.4.3
 
  - Append redo opted in attributes to cart attributes instead of replacing
