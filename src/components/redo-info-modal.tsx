@@ -25,7 +25,9 @@ function useInjectStyle(styleContent: string) {
       styleTag.textContent = styleContent;
       document.head.appendChild(styleTag);
       return () => {
-        document.head.removeChild(styleTag);
+        if(styleTag?.parentElement) {
+            styleTag.parentElement.removeChild(styleTag);
+        }
       };
     }, [styleContent]);
 }
