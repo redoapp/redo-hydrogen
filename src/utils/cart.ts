@@ -7,6 +7,8 @@ import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-typ
 import { CartLine, ComponentizableCartLine } from "@shopify/hydrogen-react/storefront-api-types";
 
 const DEFAULT_REDO_ENABLED_CART_ATTRIBUTE = 'redo_opted_in_from_cart';
+const CONCIERGE_ATTRIBUTION_CART_ATTRIBUTE_KEY = "redo.conciergeAssisted";
+const CONCIERGE_CONVERSATION_IDS_STORAGE_KEY = "redoConciergeConversationIds";
 
 const isCartWithActionsDocs = (cart: CartReturn | CartWithActionsDocs| OptimisticCart): cart is CartWithActionsDocs => {
   return (Array.isArray(cart.lines) && 'linesAdd' in cart && typeof cart.linesAdd === 'function');
@@ -197,6 +199,32 @@ const addProductToCart = async ({
   }
 };
 
+interface ConversationIdWithExpiry {
+  conversationId: string;
+  expiresAt: number;
+}
+
+function getConciergeConversationIdsFromStorage(): string[] | null {
+  try {
+    const stored = localStorage.getItem(CONCIERGE_CONVERSATION_IDS_STORAGE_KEY);
+    if (!stored) {
+      return null;
+    }
+
+    const conversationIdsWithExpiry: ConversationIdWithExpiry[] =
+      JSON.parse(stored);
+    const now = Date.now();
+
+    const validConversationIds = conversationIdsWithExpiry
+      .filter((item) => item.expiresAt > now)
+      .map((item) => item.conversationId);
+
+    return validConversationIds.length > 0 ? validConversationIds : null;
+  } catch (error) {
+    return null;
+  }
+}
+
 const setCartRedoEnabledAttribute = async ({
   cart,
   fetcher,
@@ -222,7 +250,16 @@ const setCartRedoEnabledAttribute = async ({
   );
   
   existingAttributesMap.set(redoCartAttribute.key, redoCartAttribute.value);
-  
+  const conciergeConversationIds = getConciergeConversationIdsFromStorage();
+  if (conciergeConversationIds && conciergeConversationIds.length > 0) {
+    existingAttributesMap.set(
+      CONCIERGE_ATTRIBUTION_CART_ATTRIBUTE_KEY,
+      JSON.stringify({
+        conciergeConversationIds: conciergeConversationIds,
+      })
+    );
+  }
+
   const updatedAttributes = Array.from(existingAttributesMap.entries()).map(([key, value]) => ({
     key,
     value: value ?? ""
