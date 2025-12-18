@@ -1,3 +1,11 @@
+### 1.4.6
+
+- Bugfix: bad deployment
+
+### 1.4.5
+
+- Support Redo chat widget conversation attribution
+
 ### 1.4.4
 
  - Bugfix: remove InfoModal using relative parent not document.head
