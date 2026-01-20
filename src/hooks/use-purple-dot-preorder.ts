@@ -9,16 +9,24 @@ import {
  * Watches for DOM changes and automatically disables/enables buttons based on the presence
  * of the <purple-dot-learn-more> element.
  *
+ * @param disablePreorderButtons - When true, enables the preorder button disabling logic.
+ *                                  When false, the hook does nothing.
+ *
  * Usage:
  * ```tsx
  * function ProductPage() {
- *   usePurpleDotPreorder();
+ *   const isShopOnSiteActive = true; // your condition here
+ *   useDisablePurpleDotPreorder(isShopOnSiteActive);
  *   return <div>...</div>;
  * }
  * ```
  */
-export function usePurpleDotPreorder(): void {
+export function useDisablePurpleDotPreorder(disablePreorderButtons: boolean): void {
   useEffect(() => {
+    if (!disablePreorderButtons) {
+      return;
+    }
+
     // Initial check
     updatePurpleDotButtons();
 
@@ -30,5 +38,5 @@ export function usePurpleDotPreorder(): void {
       observer.disconnect();
       cleanupPurpleDotButtons();
     };
-  }, []);
+  }, [disablePreorderButtons]);
 }
