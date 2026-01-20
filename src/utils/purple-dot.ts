@@ -71,8 +71,8 @@ export function updatePurpleDotButtons(): void {
  * Restores original disabled state.
  */
 export function cleanupPurpleDotButtons(): void {
-  const disabledButtons = document.querySelectorAll<HTMLButtonElement>(
-    `button[${DISABLED_ATTR}]`
+  const disabledButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(`button[${DISABLED_ATTR}]`)
   );
 
   for (const button of disabledButtons) {
