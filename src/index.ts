@@ -4,6 +4,7 @@ import { REDO_REQUIRED_HOSTNAMES } from "./utils/security";
 import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient, RedoError, RedoErrorType } from "./types";
 import { LoadState, Loader, useLoad } from './utils/react-utils'
 import { RedoInfoCard } from "./components/redo-info-modal";
+import { useDisablePurpleDotPreorder } from "./hooks/use-purple-dot-preorder";
 
 export {
   RedoCheckoutButtons,
@@ -12,7 +13,8 @@ export {
   useLoad,
   REDO_REQUIRED_HOSTNAMES,
   RedoErrorType,
-  RedoInfoCard
+  RedoInfoCard,
+  useDisablePurpleDotPreorder
 };
 
 export type {
