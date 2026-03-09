@@ -1,7 +1,6 @@
-import { FetcherWithComponents, useFetcher } from "@remix-run/react";
+import { FetcherWithComponents, useFetcher } from "react-router";
 import { CartInfoToEnable } from "../types";
 import { CartForm, CartReturn, OptimisticCart, OptimisticCartLine } from "@shopify/hydrogen";
-import type { AppData } from '@remix-run/react/dist/data';
 import React, { useCallback, useEffect, useRef } from 'react'
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 import { CartLine, ComponentizableCartLine } from "@shopify/hydrogen-react/storefront-api-types";
@@ -288,7 +287,7 @@ const setCartRedoEnabledAttribute = async ({
 type FetcherData<T> = NonNullable<T | unknown> // FIXME: used to use SerializeFrom which is deprecated. Can this be better typed?
 type ResolveFunction<T> = (value: FetcherData<T>) => void
 
-function useFetcherWithPromise<TData = AppData>(opts?: Parameters<typeof useFetcher>[0]) {
+function useFetcherWithPromise<TData = unknown>(opts?: Parameters<typeof useFetcher>[0]) {
   const fetcher = useFetcher<TData>(opts)
   const resolveRef = React.useRef<ResolveFunction<TData>>(null)
   const promiseRef = React.useRef<Promise<FetcherData<TData>>>(null)

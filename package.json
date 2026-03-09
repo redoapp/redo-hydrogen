@@ -17,10 +17,10 @@
     "url": "https://github.com/redoapp/redo-hydrogen/issues"
   },
   "peerDependencies": {
-    "@remix-run/react": "^2.8.0",
-    "@shopify/hydrogen": ">=2024.3.1",
-    "@shopify/hydrogen-react": ">=2024.3.1",
-    "react-dom": "^18.3.1"
+    "react-router": "^7.0.0",
+    "@shopify/hydrogen": ">=2025.1.0",
+    "@shopify/hydrogen-react": ">=2025.1.0",
+    "react-dom": ">=18.3.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.2",
