@@ -1,4 +1,3 @@
-import { useFetcher } from "react-router";
 import { CartReturn, OptimisticCart } from "@shopify/hydrogen";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { CartProductVariantFragment, CartAttributeKey, CartInfoToEnable, RedoContextValue, RedoCoverageClient, RedoError, RedoErrorType } from "../types";
