@@ -43,7 +43,6 @@ export function useLoad<T>(fn: Loader<T>, deps: DependencyList): LoadState<T> {
     // The way useLoad() is designed, we have no choice but to trust that the user gave us the correct deps for fn().
     // We could fix this by marking useLoad() as a custom hook, and then exhaustive-deps would enforce that for us.
     // https://www.npmjs.com/package/eslint-plugin-react-hooks#advanced-configuration
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   return state;
