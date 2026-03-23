@@ -2,8 +2,17 @@ import { CartReturn, OptimisticCart } from "@shopify/hydrogen";
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 import { ProductVariant } from "@shopify/hydrogen-react/storefront-api-types";
 
-type CartProductVariantFragment = Omit<ProductVariant, 
-  "components" | "metafields" | "quantityPriceBreaks" | "quantityRule" | "requiresComponents" | "requiresShipping" | "storeAvailability" | "taxable" | "weightUnit"
+type CartProductVariantFragment = Omit<
+  ProductVariant,
+  | "components"
+  | "metafields"
+  | "quantityPriceBreaks"
+  | "quantityRule"
+  | "requiresComponents"
+  | "requiresShipping"
+  | "storeAvailability"
+  | "taxable"
+  | "weightUnit"
 >;
 
 type CartAttributeKey = string;
@@ -23,36 +32,34 @@ interface RedoCoverageClient {
 }
 
 type CartInfoToEnable = {
-  productId: string,
-  variantId: string,
-  cartAttribute: CartAttributeKey,
-  selectedVariant: CartProductVariantFragment
-}
+  productId: string;
+  variantId: string;
+  cartAttribute: CartAttributeKey;
+  selectedVariant: CartProductVariantFragment;
+};
 
 type RedoContextValue = {
-  enabled: boolean,
-  loading: boolean,
-  storeId?: string,
-  cartInfoToEnable?: CartInfoToEnable,
-  cart?: CartReturn | CartWithActionsDocs | OptimisticCart,
-  errors?: RedoError[],
+  enabled: boolean;
+  loading: boolean;
+  storeId?: string;
+  cartInfoToEnable?: CartInfoToEnable;
+  cart?: CartReturn | CartWithActionsDocs | OptimisticCart;
+  errors?: RedoError[];
 };
 
 enum RedoErrorType {
   ApiBadRequest = "API_BAD_REQUEST",
   ApiServerError = "API_SERVER_ERROR",
-  ApiUnknownError = "API_UNKNOWN_ERROR"
-};
+  ApiUnknownError = "API_UNKNOWN_ERROR",
+}
 
 type RedoError = {
-  type: RedoErrorType,
-  message: string,
-  context: any
+  type: RedoErrorType;
+  message: string;
+  context: Record<string, unknown>;
 };
 
-export {
-  RedoErrorType,
-}
+export { RedoErrorType };
 
 export type {
   CartAttributeKey,
@@ -60,5 +67,5 @@ export type {
   RedoContextValue,
   RedoCoverageClient,
   CartProductVariantFragment,
-  RedoError
-}
+  RedoError,
+};

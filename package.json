@@ -9,7 +9,9 @@
     "dev": "rollup -c --watch --bundleConfigAsCjs",
     "build": "rollup -c --bundleConfigAsCjs",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\""
   },
   "repository": {
     "type": "git",
@@ -34,7 +36,9 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.4",
     "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
     "nodemon": "^3.1.9",
+    "prettier": "^3.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rollup": "^4.32.1",

@@ -6,7 +6,7 @@ const ORIGINAL_DISABLED_ATTR = "data-redo-original-disabled";
  */
 function findAddToCartButtons(): HTMLButtonElement[] {
   const buttons = document.querySelectorAll<HTMLButtonElement>(
-    'button[name="add"], button[type="submit"], .product-form__submit'
+    'button[name="add"], button[type="submit"], .product-form__submit',
   );
 
   return Array.from(buttons).filter((button) => {
@@ -44,16 +44,14 @@ export function updatePurpleDotButtons(): void {
           const msg = document.createElement("div");
           msg.className = "redo-preorder-msg";
           msg.textContent = "Preorder items cannot be added during exchanges";
-          msg.style.cssText =
-            "color: #d63031; font-size: 12px; margin-top: 8px; font-weight: 500;";
+          msg.style.cssText = "color: #d63031; font-size: 12px; margin-top: 8px; font-weight: 500;";
           button.parentElement?.insertBefore(msg, button.nextSibling);
         }
       }
     } else {
       // Re-enable the button if we disabled it
       if (button.hasAttribute(DISABLED_ATTR)) {
-        const wasDisabled =
-          button.getAttribute(ORIGINAL_DISABLED_ATTR) === "true";
+        const wasDisabled = button.getAttribute(ORIGINAL_DISABLED_ATTR) === "true";
         button.removeAttribute(DISABLED_ATTR);
         button.removeAttribute(ORIGINAL_DISABLED_ATTR);
         button.disabled = wasDisabled;
@@ -71,9 +69,7 @@ export function updatePurpleDotButtons(): void {
  * Restores original disabled state.
  */
 export function cleanupPurpleDotButtons(): void {
-  const disabledButtons = Array.from(
-    document.querySelectorAll<HTMLButtonElement>(`button[${DISABLED_ATTR}]`)
-  );
+  const disabledButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(`button[${DISABLED_ATTR}]`));
 
   for (const button of disabledButtons) {
     const wasDisabled = button.getAttribute(ORIGINAL_DISABLED_ATTR) === "true";
@@ -86,7 +82,5 @@ export function cleanupPurpleDotButtons(): void {
   }
 
   // Remove all messages
-  document
-    .querySelectorAll(".redo-preorder-msg")
-    .forEach((msg) => msg.remove());
+  document.querySelectorAll(".redo-preorder-msg").forEach((msg) => msg.remove());
 }

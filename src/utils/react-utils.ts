@@ -1,17 +1,11 @@
-import {
-  DependencyList,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { DependencyList, useEffect, useState } from "react";
 
 export interface Loader<T> {
   (abort: AbortSignal): Promise<T>;
 }
 
 export interface LoadState<T> {
-  error?: any;
+  error?: unknown;
   pending: boolean;
   value?: T;
 }
@@ -24,12 +18,14 @@ export function useLoad<T>(fn: Loader<T>, deps: DependencyList): LoadState<T> {
     setState((state) => ({ ...state, pending: true }));
     fn(abortController.signal).then(
       (value) => setState({ pending: false, value }),
-      (error) => {
+      (error: unknown) => {
+        const message = error instanceof Error ? error.message : "";
+        const code = (error as Record<string, unknown>)?.code;
         if (
           !(
-            error.message.includes("Request aborted for RPC method") ||
-            error.code === "ERR_CANCELED" ||
-            error.message === "Another request is in flight"
+            message.includes("Request aborted for RPC method") ||
+            code === "ERR_CANCELED" ||
+            message === "Another request is in flight"
           )
         ) {
           setState({ pending: false, error });

@@ -1,20 +1,24 @@
 import { FetcherWithComponents, useFetcher } from "@remix-run/react";
 import { CartInfoToEnable } from "../types";
-import { CartForm, CartReturn, OptimisticCart, OptimisticCartLine } from "@shopify/hydrogen";
-import type { AppData } from '@remix-run/react/dist/data';
-import React, { useCallback, useEffect, useRef } from 'react'
+import { CartForm, CartReturn, OptimisticCart } from "@shopify/hydrogen";
+import type { AppData } from "@remix-run/react/dist/data";
+import React, { useCallback, useEffect, useRef } from "react";
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 import { CartLine, ComponentizableCartLine } from "@shopify/hydrogen-react/storefront-api-types";
 
-const DEFAULT_REDO_ENABLED_CART_ATTRIBUTE = 'redo_opted_in_from_cart';
+const DEFAULT_REDO_ENABLED_CART_ATTRIBUTE = "redo_opted_in_from_cart";
 const CONCIERGE_ATTRIBUTION_CART_ATTRIBUTE_KEY = "redo.conciergeAssisted";
 const CONCIERGE_CONVERSATION_IDS_STORAGE_KEY = "redoConciergeConversationIds";
 
-const isCartWithActionsDocs = (cart: CartReturn | CartWithActionsDocs| OptimisticCart): cart is CartWithActionsDocs => {
-  return (Array.isArray(cart.lines) && 'linesAdd' in cart && typeof cart.linesAdd === 'function');
-}
+const isCartWithActionsDocs = (
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart,
+): cart is CartWithActionsDocs => {
+  return Array.isArray(cart.lines) && "linesAdd" in cart && typeof cart.linesAdd === "function";
+};
 
-const getCartLines = (cart: CartReturn | CartWithActionsDocs | OptimisticCart): Array<CartLine | ComponentizableCartLine> => {
+const getCartLines = (
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart,
+): Array<CartLine | ComponentizableCartLine> => {
   if (isOptimisticCart(cart)) {
     return cart.lines.nodes;
   } else if (isCartWithActionsDocs(cart)) {
@@ -22,85 +26,51 @@ const getCartLines = (cart: CartReturn | CartWithActionsDocs | OptimisticCart): 
   } else {
     return cart.lines.nodes ?? cart.lines.edges.map((edge) => edge.node);
   }
-}
+};
 
 // https://shopify.dev/docs/api/hydrogen/2025-01/hooks/useoptimisticcart
 const isOptimisticCart = (cart: CartReturn | CartWithActionsDocs | OptimisticCart): cart is OptimisticCart => {
-  return 'isOptimistic' in cart && (cart.isOptimistic ?? false);
-}
-
-const isRedoInCart = ({
-  cart
-}: {
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart
-}): boolean => {
-  if(!cart) {
-    return false;
-  }
-
-  return getCartLines(cart).some((cartLine) => {
-    return cartLine.merchandise.product.vendor === 're:do';
-  });
-}
-
-const waitForConditionsMetOrTimeout = ({
-  conditions,
-  timeoutMs
-}: {
-  conditions: (() => boolean)[];
-  timeoutMs: number;
-}): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
-    let start = Date.now();
-    let interval = setInterval(() => {
-      if((Date.now() - start) > timeoutMs) {
-        clearInterval(interval);
-        return resolve(false);
-      }
-
-      let conditionsMet = conditions.every((conditionCallback) => conditionCallback());
-
-      if(conditionsMet) {
-        clearInterval(interval);
-        return resolve(true);
-      }
-    }, 100);
-  })
-}
+  return "isOptimistic" in cart && (cart.isOptimistic ?? false);
+};
 
 const addProductToCartIfNeeded = async ({
   cart,
   fetcher,
   waitCartIdle,
-  cartInfoToEnable
+  cartInfoToEnable,
 }: {
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined,
-  fetcher: FetcherWithComponents<unknown>,
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined;
+  fetcher: FetcherWithComponents<unknown>;
   waitCartIdle: WaitCartIdleCallback;
-  cartInfoToEnable: CartInfoToEnable
+  cartInfoToEnable: CartInfoToEnable;
 }) => {
-  if(!cart) {
+  if (!cart) {
     return await addProductToCart({ cart, fetcher, waitCartIdle, cartInfoToEnable });
   }
 
   const redoProductsInCart = getCartLines(cart).filter((cartLine) => {
-    return cartLine.merchandise.product.vendor === 're:do';
+    return cartLine.merchandise.product.vendor === "re:do";
   });
   const correctRedoProductInCart = redoProductsInCart?.filter((cartLine) => {
     return cartLine.merchandise.id === `gid://shopify/ProductVariant/${cartInfoToEnable.variantId}`;
   });
-  if(redoProductsInCart.length === 0) {
+  if (redoProductsInCart.length === 0) {
     return await addProductToCart({ cart, fetcher, waitCartIdle, cartInfoToEnable });
-  } else if (redoProductsInCart.length === 1 && correctRedoProductInCart.length === 1 && correctRedoProductInCart[0].quantity === 1) {
+  } else if (
+    redoProductsInCart.length === 1 &&
+    correctRedoProductInCart.length === 1 &&
+    correctRedoProductInCart[0].quantity === 1
+  ) {
     // No action needed
     return;
   } else {
-    let isSuccess = true;
-
-    await removeLinesFromCart({ cart, fetcher, waitCartIdle, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
+    await removeLinesFromCart({
+      cart,
+      fetcher,
+      waitCartIdle,
+      lineIds: redoProductsInCart.map((cartLine) => cartLine.id),
+    });
     await addProductToCart({ cart, fetcher, waitCartIdle, cartInfoToEnable });
-
-    return;
   }
 };
 
@@ -108,7 +78,7 @@ const removeLinesFromCart = async ({
   cart,
   fetcher,
   waitCartIdle,
-  lineIds
+  lineIds,
 }: {
   cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined;
   fetcher: FetcherWithComponents<unknown>;
@@ -118,11 +88,11 @@ const removeLinesFromCart = async ({
   const formInput = {
     action: CartForm.ACTIONS.LinesRemove,
     inputs: {
-      lineIds
-    }
-  }
+      lineIds,
+    },
+  };
 
-  if(cart && isCartWithActionsDocs(cart)) {
+  if (cart && isCartWithActionsDocs(cart)) {
     cart.linesRemove(lineIds);
     await waitCartIdle();
   } else {
@@ -130,7 +100,7 @@ const removeLinesFromCart = async ({
       {
         [CartForm.INPUT_NAME]: JSON.stringify(formInput),
       },
-      {method: 'POST', action: '/cart'},
+      { method: "POST", action: "/cart" },
     );
   }
 };
@@ -139,25 +109,28 @@ const removeProductFromCartIfNeeded = async ({
   cart,
   fetcher,
   waitCartIdle,
-  cartInfoToEnable
 }: {
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined,
-  fetcher: FetcherWithComponents<unknown>,
-  waitCartIdle: WaitCartIdleCallback
-  cartInfoToEnable: CartInfoToEnable
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined;
+  fetcher: FetcherWithComponents<unknown>;
+  waitCartIdle: WaitCartIdleCallback;
+  cartInfoToEnable: CartInfoToEnable;
 }) => {
-  if(!cart) {
-    console.error('No cart');
+  if (!cart) {
+    console.error("No cart");
     return;
   }
 
   const redoProductsInCart = getCartLines(cart).filter((cartLine) => {
-    return cartLine.merchandise.product.vendor === 're:do';
+    return cartLine.merchandise.product.vendor === "re:do";
   });
 
-  if(redoProductsInCart.length !== 0) {
-    await removeLinesFromCart({ cart, fetcher, waitCartIdle, lineIds: redoProductsInCart.map((cartLine) => cartLine.id) });
-  } else {
+  if (redoProductsInCart.length !== 0) {
+    await removeLinesFromCart({
+      cart,
+      fetcher,
+      waitCartIdle,
+      lineIds: redoProductsInCart.map((cartLine) => cartLine.id),
+    });
   }
 };
 
@@ -168,25 +141,23 @@ const addProductToCart = async ({
   cartInfoToEnable,
 }: {
   waitCartIdle: WaitCartIdleCallback;
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined,
-  fetcher: FetcherWithComponents<unknown>,
-  cartInfoToEnable: CartInfoToEnable
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined;
+  fetcher: FetcherWithComponents<unknown>;
+  cartInfoToEnable: CartInfoToEnable;
 }) => {
   const redoProductLine = {
-    "merchandiseId": `gid://shopify/ProductVariant/${cartInfoToEnable.variantId}`,
-    "quantity": 1,
+    merchandiseId: `gid://shopify/ProductVariant/${cartInfoToEnable.variantId}`,
+    quantity: 1,
   };
 
   const formInput = {
     action: CartForm.ACTIONS.LinesAdd,
     inputs: {
-      lines: [
-        redoProductLine
-      ]
-    }
-  }
+      lines: [redoProductLine],
+    },
+  };
 
-  if(cart && isCartWithActionsDocs(cart)) {
+  if (cart && isCartWithActionsDocs(cart)) {
     cart.linesAdd([redoProductLine]);
     await waitCartIdle();
   } else {
@@ -194,7 +165,7 @@ const addProductToCart = async ({
       {
         [CartForm.INPUT_NAME]: JSON.stringify(formInput),
       },
-      {method: 'POST', action: '/cart'},
+      { method: "POST", action: "/cart" },
     );
   }
 };
@@ -211,8 +182,7 @@ function getConciergeConversationIdsFromStorage(): string[] | null {
       return null;
     }
 
-    const conversationIdsWithExpiry: ConversationIdWithExpiry[] =
-      JSON.parse(stored);
+    const conversationIdsWithExpiry: ConversationIdWithExpiry[] = JSON.parse(stored);
     const now = Date.now();
 
     const validConversationIds = conversationIdsWithExpiry
@@ -220,7 +190,7 @@ function getConciergeConversationIdsFromStorage(): string[] | null {
       .map((item) => item.conversationId);
 
     return validConversationIds.length > 0 ? validConversationIds : null;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }
@@ -230,7 +200,7 @@ const setCartRedoEnabledAttribute = async ({
   fetcher,
   waitCartIdle,
   cartInfoToEnable,
-  enabled
+  enabled,
 }: {
   cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined;
   fetcher: FetcherWithComponents<unknown>;
@@ -240,15 +210,13 @@ const setCartRedoEnabledAttribute = async ({
 }) => {
   const redoCartAttribute = {
     key: cartInfoToEnable?.cartAttribute || DEFAULT_REDO_ENABLED_CART_ATTRIBUTE,
-    value: enabled.toString()
+    value: enabled.toString(),
   };
 
   const existingAttributes = cart?.attributes || [];
-  
-  const existingAttributesMap = new Map(
-    existingAttributes.map(attr => [attr.key, attr.value])
-  );
-  
+
+  const existingAttributesMap = new Map(existingAttributes.map((attr) => [attr.key, attr.value]));
+
   existingAttributesMap.set(redoCartAttribute.key, redoCartAttribute.value);
   const conciergeConversationIds = getConciergeConversationIdsFromStorage();
   if (conciergeConversationIds && conciergeConversationIds.length > 0) {
@@ -256,23 +224,23 @@ const setCartRedoEnabledAttribute = async ({
       CONCIERGE_ATTRIBUTION_CART_ATTRIBUTE_KEY,
       JSON.stringify({
         conciergeConversationIds: conciergeConversationIds,
-      })
+      }),
     );
   }
 
   const updatedAttributes = Array.from(existingAttributesMap.entries()).map(([key, value]) => ({
     key,
-    value: value ?? ""
+    value: value ?? "",
   }));
 
   const formInput = {
     action: CartForm.ACTIONS.AttributesUpdateInput,
     inputs: {
-      attributes: updatedAttributes
-    }
-  }
+      attributes: updatedAttributes,
+    },
+  };
 
-  if(cart && isCartWithActionsDocs(cart)) {
+  if (cart && isCartWithActionsDocs(cart)) {
     cart.cartAttributesUpdate(updatedAttributes);
     await waitCartIdle();
   } else {
@@ -280,49 +248,49 @@ const setCartRedoEnabledAttribute = async ({
       {
         [CartForm.INPUT_NAME]: JSON.stringify(formInput),
       },
-      {method: 'POST', action: '/cart'},
+      { method: "POST", action: "/cart" },
     );
   }
 };
 
-type FetcherData<T> = NonNullable<T | unknown> // FIXME: used to use SerializeFrom which is deprecated. Can this be better typed?
-type ResolveFunction<T> = (value: FetcherData<T>) => void
+type FetcherData<T> = NonNullable<T | unknown>; // FIXME: used to use SerializeFrom which is deprecated. Can this be better typed?
+type ResolveFunction<T> = (value: FetcherData<T>) => void;
 
 function useFetcherWithPromise<TData = AppData>(opts?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<TData>(opts)
-  const resolveRef = React.useRef<ResolveFunction<TData>>(null)
-  const promiseRef = React.useRef<Promise<FetcherData<TData>>>(null)
+  const fetcher = useFetcher<TData>(opts);
+  const resolveRef = React.useRef<ResolveFunction<TData>>(null);
+  const promiseRef = React.useRef<Promise<FetcherData<TData>>>(null);
 
   if (!promiseRef.current) {
     promiseRef.current = new Promise<FetcherData<TData>>((resolve) => {
-      resolveRef.current = resolve
-    })
+      resolveRef.current = resolve;
+    });
   }
 
   const resetResolver = React.useCallback(() => {
     promiseRef.current = new Promise((resolve) => {
-      resolveRef.current = resolve
-    })
-  }, [promiseRef, resolveRef])
+      resolveRef.current = resolve;
+    });
+  }, [promiseRef, resolveRef]);
 
   const submit = React.useCallback(
     async (...args: Parameters<typeof fetcher.submit>) => {
       fetcher.submit(...args);
-      return promiseRef.current
+      return promiseRef.current;
     },
-    [fetcher, promiseRef]
-  )
+    [fetcher, promiseRef],
+  );
 
   React.useEffect(() => {
-    if (fetcher.state === 'idle') {
+    if (fetcher.state === "idle") {
       if (fetcher.data) {
-        resolveRef.current?.(fetcher.data)
+        resolveRef.current?.(fetcher.data);
       }
-      resetResolver()
+      resetResolver();
     }
-  }, [fetcher, resetResolver])
+  }, [fetcher, resetResolver]);
 
-  return { ...fetcher, submit }
+  return { ...fetcher, submit };
 }
 
 type WaitCartIdleCallback = () => Promise<CartReturn | CartWithActionsDocs | OptimisticCart>;
@@ -330,49 +298,46 @@ type WaitCartIdleCallback = () => Promise<CartReturn | CartWithActionsDocs | Opt
 // This function allows us to await a cart idle state without breaking React rules.
 // It returns a function, which returns a promise, which will resolve once the cart value passed in reaches an idle state.
 // Not intended for use with CartReturn, but will accept that value if passed in to avoid breaking rules of hooks
-const useWaitCartIdle = (cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined) => {
-  const resolveRef = useRef<any>(null)
-  const promiseRef = useRef<any>(null)
+type CartUnion = CartReturn | CartWithActionsDocs | OptimisticCart;
+
+const useWaitCartIdle = (cart: CartUnion | undefined) => {
+  const resolveRef = useRef<((value: CartUnion) => void) | null>(null);
+  const promiseRef = useRef<Promise<CartUnion>>(null!);
 
   if (!promiseRef.current) {
     promiseRef.current = new Promise<CartReturn | CartWithActionsDocs | OptimisticCart>((resolve) => {
-      resolveRef.current = resolve
-    })
+      resolveRef.current = resolve;
+    });
   }
 
   const resetResolver = useCallback(() => {
     promiseRef.current = new Promise((resolve) => {
-      resolveRef.current = resolve
-    })
+      resolveRef.current = resolve;
+    });
   }, [promiseRef, resolveRef]);
 
-  const waitCartIdle = useCallback(
-    async () => {
-      return promiseRef.current
-    },
-    [cart, promiseRef]
-  )
+  const waitCartIdle = useCallback(async () => {
+    return promiseRef.current;
+  }, [cart, promiseRef]);
 
   useEffect(() => {
-    if(!cart) {
+    if (!cart) {
       return;
     }
-    if(!isCartWithActionsDocs(cart)) {
+    if (!isCartWithActionsDocs(cart)) {
       // Wrong type of cart. Just resolve.
       resolveRef.current?.(cart);
       resetResolver();
-    } else if(cart.status === 'idle') {
-      resolveRef.current?.(cart)
+    } else if (cart.status === "idle") {
+      resolveRef.current?.(cart);
       resetResolver();
     }
   }, [cart, resetResolver]);
 
   return waitCartIdle;
-}
+};
 
-export type {
-  WaitCartIdleCallback
-}
+export type { WaitCartIdleCallback };
 
 export {
   DEFAULT_REDO_ENABLED_CART_ATTRIBUTE,
@@ -383,5 +348,5 @@ export {
   useWaitCartIdle,
   isCartWithActionsDocs,
   getCartLines,
-  isOptimisticCart
+  isOptimisticCart,
 };
