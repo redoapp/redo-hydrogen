@@ -3,10 +3,5 @@ export async function executeWithTimeout<T, E extends Error>(
   timeoutMs: number,
   error: E = new Error("timeout") as E,
 ): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(error), timeoutMs),
-    ),
-  ]);
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(error), timeoutMs))]);
 }

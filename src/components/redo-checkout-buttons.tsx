@@ -1,11 +1,11 @@
-import React, { MouseEvent, ReactNode, useEffect, useState } from "react";
-import { CartForm, CartActionInput, CartReturn, OptimisticCart } from "@shopify/hydrogen";
+import { MouseEvent, ReactNode, useEffect, useState } from "react";
+import { CartReturn, OptimisticCart } from "@shopify/hydrogen";
 import { useRedoCoverageClient } from "../providers/redo-coverage-client";
-import { CartInfoToEnable, RedoCoverageClient } from "../types";
+import { RedoCoverageClient } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
 import { CurrencyCode } from "@shopify/hydrogen-react/storefront-api-types";
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
-import { getCartLines, isCartWithActionsDocs } from "../utils/cart";
+import { getCartLines } from "../utils/cart";
 
 import CircleSpinner from "../utils/circle-spinner.svg";
 import { executeWithTimeout } from "../utils/timeout";
@@ -18,23 +18,20 @@ type CheckoutButtonUIResponse = {
 const getButtonsToShow = ({
   redoCoverageClient,
   cart,
-  storeId
+  storeId,
 }: {
-  redoCoverageClient: RedoCoverageClient,
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart,
+  redoCoverageClient: RedoCoverageClient;
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart;
   storeId: string;
 }): Promise<CheckoutButtonUIResponse | null> => {
   return new Promise<CheckoutButtonUIResponse | null>((resolve, reject) => {
-    fetch(
-      `https://${REDO_PUBLIC_API_HOSTNAME}/v2.2/stores/${storeId}/checkout-buttons-ui`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    ).then(async (res) => {
-      let json = await res.json();
+    fetch(`https://${REDO_PUBLIC_API_HOSTNAME}/v2.2/stores/${storeId}/checkout-buttons-ui`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(async (res) => {
+      const json = await res.json();
 
       if (!json.html) {
         return resolve(null);
@@ -43,7 +40,7 @@ const getButtonsToShow = ({
       const ui = applyButtonVariables({
         redoCoverageClient,
         cart,
-        ui: json
+        ui: json,
       });
 
       if (!ui) {
@@ -58,41 +55,38 @@ const getButtonsToShow = ({
 const applyButtonVariables = ({
   redoCoverageClient,
   cart,
-  ui
+  ui,
 }: {
-  redoCoverageClient: RedoCoverageClient,
-  cart: CartReturn | CartWithActionsDocs | OptimisticCart,
-  ui: CheckoutButtonUIResponse
+  redoCoverageClient: RedoCoverageClient;
+  cart: CartReturn | CartWithActionsDocs | OptimisticCart;
+  ui: CheckoutButtonUIResponse;
 }): CheckoutButtonUIResponse | null => {
   if (!redoCoverageClient.eligible || !redoCoverageClient.price || !cart?.cost) {
     return null;
   }
 
   let currencyCode: CurrencyCode = cart.cost.subtotalAmount.currencyCode;
-  if (currencyCode === 'XXX') {
-    currencyCode = 'USD';
+  if (currencyCode === "XXX") {
+    currencyCode = "USD";
   }
 
-  const cartContainsRedo = !!(getCartLines(cart).some((cartItem) => cartItem.merchandise?.product?.vendor === 're:do'));
-  const combinedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currencyCode
+  const cartContainsRedo = !!getCartLines(cart).some((cartItem) => cartItem.merchandise?.product?.vendor === "re:do");
+  const combinedPrice = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currencyCode,
   }).format(Number(cart.cost.subtotalAmount.amount) + (cartContainsRedo ? 0 : redoCoverageClient.price));
 
-  if (!combinedPrice || !combinedPrice.length || combinedPrice.includes('NaN')) {
+  if (!combinedPrice || !combinedPrice.length || combinedPrice.includes("NaN")) {
     return null;
   }
 
-  ui.html = ui.html.replaceAll('%combinedPrice%', combinedPrice);
+  ui.html = ui.html.replaceAll("%combinedPrice%", combinedPrice);
 
   return ui;
-}
+};
 
-const findAncestor = (
-  searchEl: HTMLElement | null,
-  findFn: (el: HTMLElement) => boolean
-) => {
-  if (searchEl == null) {
+const findAncestor = (searchEl: HTMLElement | null, findFn: (el: HTMLElement) => boolean) => {
+  if (searchEl === null) {
     return null;
   } else if (findFn(searchEl)) {
     return searchEl;
@@ -101,18 +95,12 @@ const findAncestor = (
   }
 };
 
-const RedoCheckoutButtons = (props: {
-  children?: ReactNode;
-  onClick?: (enabled: boolean) => void;
-}) => {
+const RedoCheckoutButtons = (props: { children?: ReactNode; onClick?: (enabled: boolean) => void }) => {
   const redoCoverageClient = useRedoCoverageClient();
-  let cart = redoCoverageClient.cart;
-  let checkoutUrl = redoCoverageClient.cart?.checkoutUrl || '/checkout';
-  let [redoProductToAdd, setRedoProductToAdd] =
-    useState<CartInfoToEnable | null>(null);
-  let [checkoutButtonsUI, setCheckoutButtonsUI] =
-    useState<CheckoutButtonUIResponse | null>(null);
-    
+  const cart = redoCoverageClient.cart;
+  const checkoutUrl = redoCoverageClient.cart?.checkoutUrl || "/checkout";
+  const [checkoutButtonsUI, setCheckoutButtonsUI] = useState<CheckoutButtonUIResponse | null>(null);
+
   const [buttonPending, setButtonPending] = useState(false);
 
   useEffect(() => {
@@ -128,24 +116,21 @@ const RedoCheckoutButtons = (props: {
     })();
   }, [cart, redoCoverageClient.eligible, redoCoverageClient.price, redoCoverageClient.storeId]);
 
-    /** To avoid the inevitable spammers trying to checkout faster by clicking over and over, between the time the promise resolves and the new tab opens (or errors) */
+  /** To avoid the inevitable spammers trying to checkout faster by clicking over and over, between the time the promise resolves and the new tab opens (or errors) */
   const DELAY_TO_ALLOW_CLICKING_AGAIN = 2000;
   const TIMEOUT_FOR_CHECKOUTS = 8000;
-  
+
   const handleCoverageCheckoutClick = async (isCoverage: boolean) => {
     if (!redoCoverageClient || !redoCoverageClient.enable || !redoCoverageClient.disable) {
-      console.error('Required redoCoverageClient methods not available');
+      console.error("Required redoCoverageClient methods not available");
       return;
     }
 
     setButtonPending(true);
     try {
       const functionToCall = isCoverage ? redoCoverageClient.enable : redoCoverageClient.disable;
-      const result = await executeWithTimeout(
-        functionToCall(),
-        TIMEOUT_FOR_CHECKOUTS
-      );
-      
+      const result = await executeWithTimeout(functionToCall(), TIMEOUT_FOR_CHECKOUTS);
+
       if (props.onClick) {
         await props.onClick(result);
       }
@@ -159,27 +144,21 @@ const RedoCheckoutButtons = (props: {
   };
 
   const wrapperClickHandler = async (e: MouseEvent) => {
-    let clickedElement = e.target as HTMLElement;
+    const clickedElement = e.target as HTMLElement;
 
     if (!clickedElement.dataset) {
       return;
     }
 
-    const isCoverageButton = findAncestor(
-      clickedElement,
-      (el) => el.dataset?.target == "coverage-button"
-    );
+    const isCoverageButton = findAncestor(clickedElement, (el) => el.dataset?.target === "coverage-button");
 
-    const isNonCoverageButton = findAncestor(
-      clickedElement,
-      (el) => el.dataset?.target == "non-coverage-button",
-    );
+    const isNonCoverageButton = findAncestor(clickedElement, (el) => el.dataset?.target === "non-coverage-button");
 
     if (isCoverageButton || isNonCoverageButton) {
       try {
         await handleCoverageCheckoutClick(isCoverageButton ? true : false);
       } catch (error) {
-        console.error('Failed to update coverage state:', error);
+        console.error("Failed to update coverage state:", error);
       }
       window.location.href = checkoutUrl;
     }
@@ -189,15 +168,15 @@ const RedoCheckoutButtons = (props: {
     <div>
       {checkoutButtonsUI ? (
         <div onClick={wrapperClickHandler} style={{ position: "relative" }}>
-           {checkoutButtonsUI.css ? <style>{checkoutButtonsUI.css}</style> : ''}
-           <div
+          {checkoutButtonsUI.css ? <style>{checkoutButtonsUI.css}</style> : ""}
+          <div
             dangerouslySetInnerHTML={{ __html: checkoutButtonsUI.html }}
-            style={{ 
-              opacity: (buttonPending) ? 0.25 : 1,
-              transition: 'opacity 0.2s ease-in-out'
+            style={{
+              opacity: buttonPending ? 0.25 : 1,
+              transition: "opacity 0.2s ease-in-out",
             }}
           />
-          {(buttonPending) && ( 
+          {buttonPending && (
             <div
               style={{
                 position: "absolute",
@@ -213,7 +192,7 @@ const RedoCheckoutButtons = (props: {
             >
               <CircleSpinner />
             </div>
-          )} 
+          )}
         </div>
       ) : (
         props.children

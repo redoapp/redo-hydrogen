@@ -1,8 +1,5 @@
 import { useEffect } from "react";
-import {
-  updatePurpleDotButtons,
-  cleanupPurpleDotButtons,
-} from "../utils/purple-dot";
+import { updatePurpleDotButtons, cleanupPurpleDotButtons } from "../utils/purple-dot";
 
 /**
  * React hook to disable add-to-cart buttons when a Purple Dot preorder element is present.
