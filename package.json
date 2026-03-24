@@ -12,9 +12,7 @@
     "lint": "eslint src/",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
-    "e2e": "npm run build && cd e2e && npx playwright test",
-    "e2e:quickstart": "npm run build && cd e2e && npx playwright test --project=quickstart",
-    "e2e:pack": "npm run build && cd e2e && npx playwright test --project=pack"
+    "e2e": "npm run build && cd e2e && npx playwright test"
   },
   "repository": {
     "type": "git",

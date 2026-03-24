@@ -43,7 +43,6 @@ export class RedoPage {
     const handle =
       productHandle ??
       process.env.QUICKSTART_PRODUCT_HANDLE ??
-      process.env.PACK_PRODUCT_HANDLE ??
       "";
     await this.page.goto(`/products/${handle}`);
     await this.productTitle.waitFor({ state: "visible", timeout: 15_000 });

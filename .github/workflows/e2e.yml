@@ -36,10 +36,6 @@ jobs:
         run: npm ci
         working-directory: e2e/fixtures/hydrogen-quickstart
 
-      - name: Install pack fixture dependencies
-        run: npm ci
-        working-directory: e2e/fixtures/hydrogen-pack
-
       - name: Install Playwright dependencies
         run: npm ci
         working-directory: e2e
@@ -57,17 +53,7 @@ jobs:
           PUBLIC_STORE_DOMAIN=${{ secrets.SHOPIFY_QUICKSTART_STORE_DOMAIN }}
           PUBLIC_REDO_STORE_ID=${{ secrets.REDO_QUICKSTART_STORE_ID }}
           PUBLIC_TEST_PRODUCT_HANDLE=${{ secrets.SHOPIFY_QUICKSTART_PRODUCT_HANDLE }}
-          EOF
-
-      - name: Create pack .env
-        working-directory: e2e/fixtures/hydrogen-pack
-        run: |
-          cat > .env << EOF
-          SESSION_SECRET=e2e-ci-secret
-          PUBLIC_STOREFRONT_API_TOKEN=${{ secrets.SHOPIFY_PACK_STOREFRONT_TOKEN }}
-          PUBLIC_STORE_DOMAIN=${{ secrets.SHOPIFY_PACK_STORE_DOMAIN }}
-          PUBLIC_REDO_STORE_ID=${{ secrets.REDO_PACK_STORE_ID }}
-          PUBLIC_TEST_PRODUCT_HANDLE=${{ secrets.SHOPIFY_PACK_PRODUCT_HANDLE }}
+          STORE_PASSWORD=${{ secrets.STORE_PASSWORD }}
           EOF
 
       - name: Run E2E tests
