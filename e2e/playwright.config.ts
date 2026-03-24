@@ -1,4 +1,4 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices, type PlaywrightTestConfig } from "@playwright/test";
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 
@@ -31,9 +31,14 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? "html" : "list",
+  preserveOutput: "always",
   use: {
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    video: {
+      mode: "on",
+      size: { width: 640, height: 480 },
+    },
   },
   projects: [
     {
@@ -65,22 +70,29 @@ export default defineConfig({
         ...quickstartEnv,
       },
     },
-    {
-      command: "npm run dev",
-      cwd: "./fixtures/hydrogen-pack",
-      port: PACK_PORT,
-      reuseExistingServer: !process.env.CI,
-      timeout: 30_000,
-      env: {
-        ...process.env,
-        ...packEnv,
-      },
-    },
-  ],
+    ...(existsSync(resolve(__dirname, "./fixtures/hydrogen-pack/node_modules"))
+      ? [
+          {
+            command: "npm run dev",
+            cwd: "./fixtures/hydrogen-pack",
+            port: PACK_PORT,
+            reuseExistingServer: !process.env.CI,
+            timeout: 30_000,
+            env: {
+              ...process.env,
+              ...packEnv,
+            },
+          },
+        ]
+      : []),
+  ] as PlaywrightTestConfig["webServer"],
 });
 
-// Make fixture env vars available to test files
 process.env.QUICKSTART_PRODUCT_HANDLE =
   process.env.SHOPIFY_QUICKSTART_PRODUCT_HANDLE || quickstartEnv.PUBLIC_TEST_PRODUCT_HANDLE || "";
 process.env.PACK_PRODUCT_HANDLE =
   process.env.SHOPIFY_PACK_PRODUCT_HANDLE || packEnv.PUBLIC_TEST_PRODUCT_HANDLE || "";
+process.env.STORE_PASSWORD =
+  process.env.STORE_PASSWORD || quickstartEnv.STORE_PASSWORD || "";
+process.env.QUICKSTART_STORE_DOMAIN =
+  process.env.SHOPIFY_QUICKSTART_STORE_DOMAIN || quickstartEnv.PUBLIC_STORE_DOMAIN || "";

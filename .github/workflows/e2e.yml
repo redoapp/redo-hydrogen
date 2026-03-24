@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   e2e:
     name: E2E Tests
@@ -69,6 +73,28 @@ jobs:
       - name: Run E2E tests
         run: npx playwright test
         working-directory: e2e
+
+      - name: Compile test video
+        if: always()
+        run: bash scripts/compile-video.sh
+        working-directory: e2e
+
+      - name: Upload test video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-video
+          path: e2e/test-run.mp4
+          retention-days: 14
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        run: |
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "**E2E test recording** — [download video](${RUN_URL}#artifacts) (4x speed, 640x480)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
