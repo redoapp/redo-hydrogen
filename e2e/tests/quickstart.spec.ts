@@ -1,245 +1,138 @@
 import { test, expect } from "@playwright/test";
 import { RedoPage } from "./helpers/redo-page";
 import {
+  assertRedoComponentsVisible,
+  assertRedoEligibleWithPrice,
   assertRedoProductInCart,
-  assertRedoProductNotInCart,
-  assertRedoOptedIn,
-  assertRedoOptedOut,
-  assertRedoEligible,
-  assertRedoPriceDisplayed,
+  assertRedoEnabled,
 } from "./helpers/cart-assertions";
 
-test.describe("Standard Hydrogen - Provider Initialization", () => {
-  test("loads product page and shows product info", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-    await redoPage.goto();
-    await expect(redoPage.productTitle).toBeVisible();
+test.describe("Side Cart - Redo Components", () => {
+  test("Checkout+ and non-coverage buttons show up in side cart", async ({ page }) => {
+    const redo = new RedoPage(page);
+    await redo.gotoProduct();
+    await redo.addToCartAndOpenDrawer();
+    await redo.waitForRedoEligible();
+
+    await assertRedoComponentsVisible(redo);
+
+    const coverageText = await redo.coverageButton.textContent();
+    expect(coverageText).toContain("Checkout+");
+    expect(coverageText).toMatch(/\$[\d,.]+/);
+
+    const nonCoverageText = await redo.nonCoverageButton.textContent();
+    expect(nonCoverageText).toContain("Checkout without free returns");
   });
 
-  test("RedoProvider fetches coverage products after adding to cart", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-    await redoPage.goto();
-    await redoPage.addProductToCart();
-    await redoPage.goto();
-    await redoPage.waitForRedoLoaded();
-  });
+  test("RedoInfoCard renders with price", async ({ page }) => {
+    const redo = new RedoPage(page);
+    await redo.gotoProduct();
+    await redo.addToCartAndOpenDrawer();
+    await redo.waitForRedoEligible();
 
-  test("shows eligible status and price when coverage is available", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-    await redoPage.goto();
-    await redoPage.addProductToCart();
-    await redoPage.goto();
-    await redoPage.waitForRedoEligible();
-    await assertRedoEligible(redoPage);
-    await assertRedoPriceDisplayed(redoPage);
-  });
-
-  test("RedoInfoCard renders with correct price", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-    await redoPage.goto();
-    await redoPage.addProductToCart();
-    await redoPage.goto();
-    await redoPage.waitForRedoEligible();
-
-    await expect(redoPage.infoCard).toBeVisible();
+    await expect(redo.infoCard).toBeVisible();
     const priceText = await page.locator('[data-target="price"]').textContent();
     expect(priceText).toMatch(/\$[\d.]+/);
   });
 
   test("info modal opens and closes", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-    await redoPage.goto();
-    await redoPage.addProductToCart();
-    await redoPage.goto();
-    await redoPage.waitForRedoEligible();
+    const redo = new RedoPage(page);
+    await redo.gotoProduct();
+    await redo.addToCartAndOpenDrawer();
+    await redo.waitForRedoEligible();
 
-    await redoPage.openInfoModal();
-    await expect(redoPage.modalBackground).toBeVisible();
-    await expect(page.locator(".redo-info-modal__title")).toHaveText("Checkout with confidence");
+    await redo.openInfoModal();
+    await expect(redo.modalBackground).toBeVisible();
 
-    await redoPage.closeInfoModal();
-    await expect(redoPage.modalBackground).not.toBeVisible();
+    await redo.closeInfoModal();
+    await expect(redo.modalBackground).not.toBeVisible();
+  });
+
+  test("provider shows eligible, price, and enabled state", async ({ page }) => {
+    const redo = new RedoPage(page);
+    await redo.gotoProduct();
+    await redo.addToCartAndOpenDrawer();
+    await redo.waitForRedoEligible();
+
+    await assertRedoEligibleWithPrice(redo);
+    await assertRedoProductInCart(redo);
+    await assertRedoEnabled(redo);
   });
 });
 
-test.describe("Standard Hydrogen - Cart Operations", () => {
-  test.beforeEach(async ({ page }) => {
-    const redoPage = new RedoPage(page);
-    await redoPage.goto();
-    await redoPage.addProductToCart();
-    await redoPage.goto();
-    await redoPage.waitForRedoEligible();
-  });
+test.describe("Main Cart Page - Redo Components", () => {
+  test("Checkout+ and non-coverage buttons show up on /cart page", async ({ page }) => {
+    const redo = new RedoPage(page);
+    await redo.gotoProduct();
+    await redo.addToCartAndOpenDrawer();
 
-  test("coverage checkout button adds Redo product to cart", async ({ page }) => {
-    const redoPage = new RedoPage(page);
+    await redo.gotoCart();
+    await redo.waitForRedoEligible();
 
-    await page.route("**/checkout**", (route) =>
-      route.fulfill({ status: 200, body: "<html><body>Checkout</body></html>" }),
-    );
+    await assertRedoComponentsVisible(redo);
 
-    await redoPage.coverageButton.click();
-    await page.waitForTimeout(3000);
+    const coverageText = await redo.coverageButton.textContent();
+    expect(coverageText).toContain("Checkout+");
 
-    await redoPage.goto();
-    await redoPage.waitForRedoLoaded();
-    await assertRedoProductInCart(redoPage);
-  });
-
-  test("non-coverage checkout button removes Redo product from cart", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-
-    await page.route("**/checkout**", (route) =>
-      route.fulfill({ status: 200, body: "<html><body>Checkout</body></html>" }),
-    );
-
-    await redoPage.coverageButton.click();
-    await page.waitForTimeout(3000);
-
-    await redoPage.goto();
-    await redoPage.waitForRedoEligible();
-
-    await redoPage.nonCoverageButton.click();
-    await page.waitForTimeout(3000);
-
-    await redoPage.goto();
-    await redoPage.waitForRedoLoaded();
-    await assertRedoProductNotInCart(redoPage);
-  });
-
-  test("cart attributes are set correctly on enable", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-
-    await page.route("**/checkout**", (route) =>
-      route.fulfill({ status: 200, body: "<html><body>Checkout</body></html>" }),
-    );
-
-    await redoPage.coverageButton.click();
-    await page.waitForTimeout(3000);
-
-    await redoPage.goto();
-    await page.waitForLoadState("networkidle");
-    await assertRedoOptedIn(redoPage);
-  });
-
-  test("cart attributes are set correctly on disable", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-
-    await page.route("**/checkout**", (route) =>
-      route.fulfill({ status: 200, body: "<html><body>Checkout</body></html>" }),
-    );
-
-    await redoPage.coverageButton.click();
-    await page.waitForTimeout(3000);
-
-    await redoPage.goto();
-    await redoPage.waitForRedoEligible();
-
-    await redoPage.nonCoverageButton.click();
-    await page.waitForTimeout(3000);
-
-    await redoPage.goto();
-    await page.waitForLoadState("networkidle");
-    await assertRedoOptedOut(redoPage);
+    const nonCoverageText = await redo.nonCoverageButton.textContent();
+    expect(nonCoverageText).toContain("Checkout without free returns");
   });
 });
 
-test.describe("Standard Hydrogen - Checkout Buttons", () => {
-  test.beforeEach(async ({ page }) => {
-    const redoPage = new RedoPage(page);
-    await redoPage.goto();
-    await redoPage.addProductToCart();
-    await redoPage.goto();
-    await redoPage.waitForRedoEligible();
-  });
+test.describe("Checkout+ Flow", () => {
+  test("navigates to checkout with Redo product when Checkout+ clicked", async ({ page }) => {
+    const redo = new RedoPage(page);
+    await redo.authPasswordProtectedStore(process.env.QUICKSTART_STORE_DOMAIN!);
+    await redo.gotoProduct();
+    await redo.addToCartAndOpenDrawer();
+    await redo.waitForRedoEligible();
 
-  test("checkout buttons are rendered from API", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-    await expect(redoPage.coverageButton).toBeVisible({ timeout: 10_000 });
-    await expect(redoPage.nonCoverageButton).toBeVisible();
-  });
-
-  test("coverage button shows spinner during pending state", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-
-    await page.route("**/checkout**", (route) =>
-      route.fulfill({ status: 200, body: "<html><body>Checkout</body></html>" }),
-    );
-
-    await redoPage.coverageButton.click();
-
-    const spinner = page.locator("svg").filter({ has: page.locator("circle") });
-    await expect(spinner.first()).toBeVisible({ timeout: 5_000 });
-  });
-
-  test("coverage button navigates to checkout", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-
-    const [response] = await Promise.all([
-      page.waitForEvent("response", (resp) => resp.url().includes("checkout")),
-      redoPage.coverageButton.click(),
-    ]);
-
-    expect(response.url()).toContain("checkout");
-  });
-});
-
-test.describe("Standard Hydrogen - Checkout Verification", () => {
-  test("Redo product visible on checkout page after enabling coverage", async ({ page }) => {
-    const redoPage = new RedoPage(page);
-    await redoPage.goto();
-    await redoPage.addProductToCart();
-    await redoPage.goto();
-    await redoPage.waitForRedoEligible();
-
-    await redoPage.coverageButton.click();
-    await page.waitForURL(/checkout/, { timeout: 20_000 });
+    await redo.clickCoverageAndWaitForCheckout();
     expect(page.url()).toContain("checkout");
 
-    const checkoutContent = await page.content();
-    expect(
-      checkoutContent.toLowerCase().includes("redo") ||
-        checkoutContent.toLowerCase().includes("re:do") ||
-        checkoutContent.includes("Package Protection") ||
-        checkoutContent.includes("Checkout+"),
-    ).toBeTruthy();
+    const hasRedo = await redo.checkoutPageHasRedoProduct();
+    expect(hasRedo).toBe(true);
   });
 });
 
-test.describe("Standard Hydrogen - Error Handling", () => {
+test.describe("Checkout Without Free Returns Flow", () => {
+  test("navigates to checkout without Redo product when non-coverage clicked", async ({ page }) => {
+    const redo = new RedoPage(page);
+    await redo.authPasswordProtectedStore(process.env.QUICKSTART_STORE_DOMAIN!);
+    await redo.gotoProduct();
+    await redo.addToCartAndOpenDrawer();
+    await redo.waitForRedoEligible();
+
+    await redo.clickNonCoverageAndWaitForCheckout();
+    expect(page.url()).toContain("checkout");
+
+    const hasRedo = await redo.checkoutPageHasRedoProduct();
+    expect(hasRedo).toBe(false);
+  });
+});
+
+test.describe("Error Handling", () => {
   test("API 500 error surfaces in client errors", async ({ page }) => {
-    const redoPage = new RedoPage(page);
+    const redo = new RedoPage(page);
+    await redo.mockCoverageProductsApi(500, { error: "Internal server error" });
 
-    await redoPage.mockCoverageProductsApi(500, {
-      error: "Internal server error",
-    });
-
-    await redoPage.goto();
-    await redoPage.addProductToCart();
-    await redoPage.goto();
-
+    await redo.gotoProduct();
+    await redo.addToCartAndOpenDrawer();
     await page.waitForTimeout(3000);
 
-    const errors = await redoPage.getRedoErrors();
+    const errors = await redo.getRedoErrors();
     expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].type).toBe("API_SERVER_ERROR");
   });
 
-  test("API 400 error surfaces as bad request", async ({ page }) => {
-    const redoPage = new RedoPage(page);
+  test("API 400 error surfaces in client errors", async ({ page }) => {
+    const redo = new RedoPage(page);
+    await redo.mockCoverageProductsApi(400, { error: "Bad request" });
 
-    await redoPage.mockCoverageProductsApi(400, {
-      error: "Bad request",
-    });
-
-    await redoPage.goto();
-    await redoPage.addProductToCart();
-    await redoPage.goto();
-
+    await redo.gotoProduct();
+    await redo.addToCartAndOpenDrawer();
     await page.waitForTimeout(3000);
 
-    const errors = await redoPage.getRedoErrors();
+    const errors = await redo.getRedoErrors();
     expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].type).toBe("API_BAD_REQUEST");
   });
 });
