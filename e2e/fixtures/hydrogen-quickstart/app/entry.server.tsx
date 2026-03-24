@@ -1,16 +1,19 @@
-import type {AppLoadContext, EntryContext} from '@shopify/remix-oxygen';
-import {RemixServer} from '@remix-run/react';
-import isbot from 'isbot';
+import {ServerRouter} from 'react-router';
+import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
-import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import {
+  createContentSecurityPolicy,
+  type HydrogenRouterContextProvider,
+} from '@shopify/hydrogen';
+import type {EntryContext} from 'react-router';
 import {REDO_REQUIRED_HOSTNAMES} from '@redotech/redo-hydrogen';
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext,
-  context: AppLoadContext,
+  reactRouterContext: EntryContext,
+  context: HydrogenRouterContextProvider,
 ) {
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     shop: {
@@ -19,25 +22,20 @@ export default async function handleRequest(
     },
     defaultSrc: [...REDO_REQUIRED_HOSTNAMES],
     connectSrc: [...REDO_REQUIRED_HOSTNAMES],
-    scriptSrc: [
-      'self',
-      'https://cdn.shopify.com',
-      'https://shopify.com',
-      'https://www.google-analytics.com',
-      'https://www.googletagmanager.com',
-      ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:*'] : []),
-    ],
   });
 
   const body = await renderToReadableStream(
     <NonceProvider>
-      <RemixServer context={remixContext} url={request.url} />
+      <ServerRouter
+        context={reactRouterContext}
+        url={request.url}
+        nonce={nonce}
+      />
     </NonceProvider>,
     {
       nonce,
       signal: request.signal,
       onError(error) {
-        // eslint-disable-next-line no-console
         console.error(error);
         responseStatusCode = 500;
       },
@@ -50,6 +48,7 @@ export default async function handleRequest(
 
   responseHeaders.set('Content-Type', 'text/html');
   responseHeaders.set('Content-Security-Policy', header);
+
   return new Response(body, {
     headers: responseHeaders,
     status: responseStatusCode,

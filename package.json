@@ -23,8 +23,8 @@
     "url": "https://github.com/redoapp/redo-hydrogen/issues"
   },
   "peerDependencies": {
-    "@shopify/hydrogen": ">=2025.5.0",
-    "@shopify/hydrogen-react": ">=2025.1.0",
+    "@shopify/hydrogen": ">=2025.7.0",
+    "@shopify/hydrogen-react": ">=2025.7.0",
     "react-dom": ">=18.3.1",
     "react-router": "^7.0.0"
   },
@@ -36,8 +36,8 @@
     "@shopify/hydrogen": "^2026.1.2",
     "@shopify/hydrogen-react": "^2026.1.1",
     "@svgr/rollup": "^8.1.0",
-    "@types/react": "^19.0.8",
-    "@types/react-dom": "^19.0.4",
+    "@types/react": "^18.2.22",
+    "@types/react-dom": "^18.2.7",
     "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
     "nodemon": "^3.1.9",

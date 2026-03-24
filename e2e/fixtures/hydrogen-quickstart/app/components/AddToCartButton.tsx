@@ -1,50 +1,37 @@
+import {type FetcherWithComponents} from 'react-router';
 import {CartForm, type OptimisticCartLineInput} from '@shopify/hydrogen';
-import type {FetcherWithComponents} from '@remix-run/react';
-
-import {Button} from '~/components/Button';
 
 export function AddToCartButton({
+  analytics,
   children,
-  lines,
-  className = '',
-  variant = 'primary',
-  width = 'full',
   disabled,
-  ...props
+  lines,
+  onClick,
 }: {
+  analytics?: unknown;
   children: React.ReactNode;
-  lines: Array<OptimisticCartLineInput>;
-  className?: string;
-  variant?: 'primary' | 'secondary' | 'inline';
-  width?: 'auto' | 'full';
   disabled?: boolean;
-  [key: string]: any;
+  lines: Array<OptimisticCartLineInput>;
+  onClick?: () => void;
 }) {
   return (
-    <CartForm
-      route="/cart"
-      inputs={{
-        lines,
-      }}
-      action={CartForm.ACTIONS.LinesAdd}
-    >
-      {(fetcher: FetcherWithComponents<any>) => {
-        return (
-          <>
-            <Button
-              as="button"
-              type="submit"
-              width={width}
-              variant={variant}
-              className={className}
-              disabled={disabled ?? fetcher.state !== 'idle'}
-              {...props}
-            >
-              {children}
-            </Button>
-          </>
-        );
-      }}
+    <CartForm route="/cart" inputs={{lines}} action={CartForm.ACTIONS.LinesAdd}>
+      {(fetcher: FetcherWithComponents<any>) => (
+        <>
+          <input
+            name="analytics"
+            type="hidden"
+            value={JSON.stringify(analytics)}
+          />
+          <button
+            type="submit"
+            onClick={onClick}
+            disabled={disabled ?? fetcher.state !== 'idle'}
+          >
+            {children}
+          </button>
+        </>
+      )}
     </CartForm>
   );
 }
