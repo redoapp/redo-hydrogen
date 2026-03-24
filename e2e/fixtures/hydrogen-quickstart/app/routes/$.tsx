@@ -1,7 +1,11 @@
-export async function loader() {
-  throw new Response('Not found', {status: 404});
+import type {Route} from './+types/$';
+
+export async function loader({request}: Route.LoaderArgs) {
+  throw new Response(`${new URL(request.url).pathname} not found`, {
+    status: 404,
+  });
 }
 
-export default function Component() {
+export default function CatchAllPage() {
   return null;
 }

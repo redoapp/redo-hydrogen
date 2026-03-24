@@ -1,32 +1,23 @@
-import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
-
-import {getSitemap} from 'app/lib/sitemap';
-import {countries} from '~/data/countries';
-
-const locales = Object.keys(countries).filter((k) => k !== 'default');
-locales.unshift('en-us');
+import type {Route} from './+types/sitemap.$type.$page[.xml]';
+import {getSitemap} from '@shopify/hydrogen';
 
 export async function loader({
   request,
   params,
   context: {storefront},
-}: LoaderFunctionArgs) {
+}: Route.LoaderArgs) {
   const response = await getSitemap({
     storefront,
     request,
     params,
-    locales,
+    locales: ['EN-US', 'EN-CA', 'FR-CA'],
     getLink: ({type, baseUrl, handle, locale}) => {
-      // Make sure the generated sitemap urls are reflective of the routes
-      const typeUrl = type === 'articles' ? 'journal' : type;
-
-      if (!locale) return `${baseUrl}/${typeUrl}/${handle}`;
-      return `${baseUrl}${locale}/${typeUrl}/${handle}`;
+      if (!locale) return `${baseUrl}/${type}/${handle}`;
+      return `${baseUrl}/${locale}/${type}/${handle}`;
     },
   });
 
-  response.headers.set('Oxygen-Cache-Control', `max-age=${60 * 60 * 24}`);
-  response.headers.set('Vary', 'Accept-Encoding, Accept-Language');
+  response.headers.set('Cache-Control', `max-age=${60 * 60 * 24}`);
 
   return response;
 }
