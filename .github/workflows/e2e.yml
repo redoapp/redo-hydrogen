@@ -23,26 +23,8 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install root dependencies
-        run: npm ci
-
-      - name: Build package
-        run: npm run build
-
-      - name: Pack package
-        run: npm pack
-
-      - name: Install quickstart fixture dependencies
-        run: npm ci
-        working-directory: e2e/fixtures/hydrogen-quickstart
-
-      - name: Install Playwright dependencies
-        run: npm ci
-        working-directory: e2e
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-        working-directory: e2e
+      - name: Setup test environment
+        run: bash e2e/scripts/setup.sh
 
       - name: Create quickstart .env
         working-directory: e2e/fixtures/hydrogen-quickstart
