@@ -4,13 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version bump type"
+        description: "Exact version to publish (e.g. 2.1.0)"
         required: true
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+        type: string
 
 permissions:
   contents: write
@@ -49,14 +45,24 @@ jobs:
             exit 1
           fi
 
-      - name: Bump version
+      - name: Set version
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
+          CURRENT=$(node -p "require('./package.json').version")
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          npm version ${{ inputs.version }} -m "v%s"
-
-      - name: Push version commit and tag
-        run: git push --follow-tags
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          if [ "$CURRENT" != "${{ inputs.version }}" ]; then
+            npm version ${{ inputs.version }} --no-git-tag-version
+            git add package.json package-lock.json
+            git commit -m "v${{ inputs.version }}"
+            git tag "v${{ inputs.version }}"
+            git push --follow-tags
+          else
+            git tag "v${{ inputs.version }}"
+            git push --tags
+          fi
 
       - name: Publish
         run: npm publish --access public --provenance
