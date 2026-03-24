@@ -1,3 +1,11 @@
+## 2.0.0
+
+- **Breaking:** migrate from Remix to React Router 7 (requires `@shopify/hydrogen` >=2025.7.0)
+- Update all peer dependencies for Hydrogen 2025.7+ compatibility
+- Themes still using Remix should use the [1.x releases](https://github.com/redoapp/redo-hydrogen/tree/release/1.4)
+
+## 1.x
+
 ### 1.4.7
 
 - Add hook to disable pre-order buttons from Purple Dot when using shop on site
