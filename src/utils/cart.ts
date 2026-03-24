@@ -273,9 +273,9 @@ function useFetcherWithPromise<TData = unknown>(opts?: Parameters<typeof useFetc
   }, [promiseRef, resolveRef]);
 
   const submit = React.useCallback(
-    async (...args: Parameters<typeof fetcher.submit>) => {
+    async (...args: Parameters<typeof fetcher.submit>): Promise<void> => {
       fetcher.submit(...args);
-      return promiseRef.current;
+      await promiseRef.current;
     },
     [fetcher, promiseRef],
   );
