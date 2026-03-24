@@ -1,0 +1,13 @@
+{
+  "name": "redo-hydrogen-e2e",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:quickstart": "playwright test --project=quickstart",
+    "test:pack": "playwright test --project=pack",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

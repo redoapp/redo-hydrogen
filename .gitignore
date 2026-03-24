@@ -1,3 +1,10 @@
 node_modules/
 .DS_Store
 dist/
+
+# E2E test artifacts
+e2e/playwright-report/
+e2e/test-results/
+e2e/fixtures/*/.env
+e2e/fixtures/*/node_modules/
+*.tgz
