@@ -28,7 +28,10 @@ export default defineConfig({
   fullyParallel: true,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? "html" : "list",
+  reporter: [
+    [process.env.CI ? "html" : "list"],
+    ["json", { outputFile: "test-results/results.json" }],
+  ],
   preserveOutput: "always",
   use: {
     ...devices["Desktop Chrome"],
