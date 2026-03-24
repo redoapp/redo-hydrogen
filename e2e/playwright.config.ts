@@ -1,9 +1,8 @@
-import { defineConfig, devices, type PlaywrightTestConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 
 const QUICKSTART_PORT = 2501;
-const PACK_PORT = 2502;
 
 function loadEnvFromFixture(fixturePath: string): Record<string, string> {
   const envPath = resolve(__dirname, fixturePath, ".env");
@@ -21,7 +20,6 @@ function loadEnvFromFixture(fixturePath: string): Record<string, string> {
 }
 
 const quickstartEnv = loadEnvFromFixture("./fixtures/hydrogen-quickstart");
-const packEnv = loadEnvFromFixture("./fixtures/hydrogen-pack");
 
 export default defineConfig({
   testDir: "./tests",
@@ -33,6 +31,8 @@ export default defineConfig({
   reporter: process.env.CI ? "html" : "list",
   preserveOutput: "always",
   use: {
+    ...devices["Desktop Chrome"],
+    baseURL: `http://localhost:${QUICKSTART_PORT}`,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: {
@@ -40,58 +40,21 @@ export default defineConfig({
       size: { width: 640, height: 480 },
     },
   },
-  projects: [
-    {
-      name: "quickstart",
-      testMatch: /quickstart\.spec\.ts/,
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: `http://localhost:${QUICKSTART_PORT}`,
-      },
+  webServer: {
+    command: "npm run dev",
+    cwd: "./fixtures/hydrogen-quickstart",
+    port: QUICKSTART_PORT,
+    reuseExistingServer: !process.env.CI,
+    timeout: 30_000,
+    env: {
+      ...process.env,
+      ...quickstartEnv,
     },
-    {
-      name: "pack",
-      testMatch: /pack\.spec\.ts/,
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: `http://localhost:${PACK_PORT}`,
-      },
-    },
-  ],
-  webServer: [
-    {
-      command: "npm run dev",
-      cwd: "./fixtures/hydrogen-quickstart",
-      port: QUICKSTART_PORT,
-      reuseExistingServer: !process.env.CI,
-      timeout: 30_000,
-      env: {
-        ...process.env,
-        ...quickstartEnv,
-      },
-    },
-    ...(existsSync(resolve(__dirname, "./fixtures/hydrogen-pack/node_modules"))
-      ? [
-          {
-            command: "npm run dev",
-            cwd: "./fixtures/hydrogen-pack",
-            port: PACK_PORT,
-            reuseExistingServer: !process.env.CI,
-            timeout: 30_000,
-            env: {
-              ...process.env,
-              ...packEnv,
-            },
-          },
-        ]
-      : []),
-  ] as PlaywrightTestConfig["webServer"],
+  },
 });
 
 process.env.QUICKSTART_PRODUCT_HANDLE =
   process.env.SHOPIFY_QUICKSTART_PRODUCT_HANDLE || quickstartEnv.PUBLIC_TEST_PRODUCT_HANDLE || "";
-process.env.PACK_PRODUCT_HANDLE =
-  process.env.SHOPIFY_PACK_PRODUCT_HANDLE || packEnv.PUBLIC_TEST_PRODUCT_HANDLE || "";
 process.env.STORE_PASSWORD =
   process.env.STORE_PASSWORD || quickstartEnv.STORE_PASSWORD || "";
 process.env.QUICKSTART_STORE_DOMAIN =
