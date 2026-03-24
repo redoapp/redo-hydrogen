@@ -1,6 +1,6 @@
 import { FetcherWithComponents, useFetcher } from "react-router";
 import { CartInfoToEnable } from "../types";
-import { CartForm, CartReturn, OptimisticCart, OptimisticCartLine } from "@shopify/hydrogen";
+import { CartForm, CartReturn, OptimisticCart } from "@shopify/hydrogen";
 import React, { useCallback, useEffect, useRef } from "react";
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
 import { CartLine, ComponentizableCartLine } from "@shopify/hydrogen-react/storefront-api-types";
