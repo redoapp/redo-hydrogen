@@ -5,23 +5,23 @@ export class RedoPage {
   readonly addToCartButton: Locator;
   readonly productTitle: Locator;
 
-  readonly redoDebug: Locator;
-  readonly redoLoading: Locator;
-  readonly redoEligible: Locator;
-  readonly redoPrice: Locator;
-  readonly redoErrors: Locator;
+  redoDebug: Locator;
+  redoLoading: Locator;
+  redoEligible: Locator;
+  redoPrice: Locator;
+  redoErrors: Locator;
 
-  readonly infoCard: Locator;
-  readonly infoButton: Locator;
+  infoCard: Locator;
+  infoButton: Locator;
   readonly modalBackground: Locator;
   readonly modalCloseButton: Locator;
 
-  readonly coverageButton: Locator;
-  readonly nonCoverageButton: Locator;
+  coverageButton: Locator;
+  nonCoverageButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.addToCartButton = page.locator('[data-test="add-to-cart"]');
+    this.addToCartButton = page.locator('.product-form [action="/cart"] > button[type="submit"]');
     this.productTitle = page.locator("h1");
 
     this.redoDebug = page.locator('[data-testid="redo-debug"]');
@@ -40,10 +40,7 @@ export class RedoPage {
   }
 
   async gotoProduct(productHandle?: string) {
-    const handle =
-      productHandle ??
-      process.env.QUICKSTART_PRODUCT_HANDLE ??
-      "";
+    const handle = productHandle ?? process.env.QUICKSTART_PRODUCT_HANDLE ?? "";
     await this.page.goto(`/products/${handle}`);
     await this.productTitle.waitFor({ state: "visible", timeout: 15_000 });
   }
@@ -51,6 +48,20 @@ export class RedoPage {
   async gotoCart() {
     await this.page.goto("/cart");
     await this.page.waitForLoadState("networkidle");
+    this.scopeToMain();
+  }
+
+  private scopeToMain() {
+    const main = this.page.getByRole("main");
+    this.redoDebug = main.locator('[data-testid="redo-debug"]');
+    this.redoLoading = main.locator('[data-testid="redo-loading"]');
+    this.redoEligible = main.locator('[data-testid="redo-eligible"]');
+    this.redoPrice = main.locator('[data-testid="redo-price"]');
+    this.redoErrors = main.locator('[data-testid="redo-errors"]');
+    this.infoCard = main.locator('[data-target="info-card-container"]');
+    this.infoButton = main.locator('[data-target="toggle-info-button"]');
+    this.coverageButton = main.locator('[data-target="coverage-button"]');
+    this.nonCoverageButton = main.locator('[data-target="non-coverage-button"]');
   }
 
   async addToCartAndOpenDrawer() {
@@ -151,11 +162,7 @@ export class RedoPage {
     await this.page.waitForLoadState("networkidle");
     const content = await this.page.content();
     const lower = content.toLowerCase();
-    return (
-      lower.includes("free unlimited return") ||
-      lower.includes("re:do") ||
-      lower.includes("package protection")
-    );
+    return lower.includes("free unlimited return") || lower.includes("re:do") || lower.includes("package protection");
   }
 
   async mockCoverageProductsApi(statusCode: number, body: Record<string, unknown>) {
