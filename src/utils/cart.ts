@@ -257,8 +257,8 @@ type ResolveFunction<T> = (value: FetcherData<T>) => void;
 
 function useFetcherWithPromise<TData = unknown>(opts?: Parameters<typeof useFetcher>[0]) {
   const fetcher = useFetcher<TData>(opts);
-  const resolveRef = React.useRef<ResolveFunction<TData>>(null);
-  const promiseRef = React.useRef<Promise<FetcherData<TData>>>(null);
+  const resolveRef = React.useRef<ResolveFunction<TData> | null>(null);
+  const promiseRef = React.useRef<Promise<FetcherData<TData>> | null>(null);
 
   if (!promiseRef.current) {
     promiseRef.current = new Promise<FetcherData<TData>>((resolve) => {
