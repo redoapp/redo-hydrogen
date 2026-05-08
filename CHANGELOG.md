@@ -1,3 +1,7 @@
+### 1.4.8
+
+- Get new coverage quote if cart lines mutated in-place without changing cart object
+
 ### 1.4.7
 
 - Add hook to disable pre-order buttons from Purple Dot when using shop on site

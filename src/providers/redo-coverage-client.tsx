@@ -8,6 +8,7 @@ import {
   setCartRedoEnabledAttribute,
   useFetcherWithPromise,
   getCartLines,
+  getCartEligibilityPriceKey,
   useWaitCartIdle,
   isOptimisticCart,
 } from "../utils/cart";
@@ -125,7 +126,7 @@ const RedoProvider = ({
 
       setCartInfoToEnable(json.coverageProducts[0].cartInfoToEnable);
     });
-  }, [cart, storeId]);
+  }, [getCartEligibilityPriceKey(cart), storeId]);
 
   const contextVal: RedoContextValue = {
     enabled: true,
