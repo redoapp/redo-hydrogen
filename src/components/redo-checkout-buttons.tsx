@@ -5,7 +5,7 @@ import { RedoCoverageClient } from "../types";
 import { REDO_PUBLIC_API_HOSTNAME } from "../utils/security";
 import { CurrencyCode } from "@shopify/hydrogen-react/storefront-api-types";
 import { CartWithActionsDocs } from "@shopify/hydrogen-react/dist/types/cart-types";
-import { getCartLines } from "../utils/cart";
+import { getCartLines, getCartEligibilityPriceKey } from "../utils/cart";
 
 import CircleSpinner from "../utils/circle-spinner.svg";
 import { executeWithTimeout } from "../utils/timeout";
@@ -114,7 +114,12 @@ const RedoCheckoutButtons = (props: { children?: ReactNode; onClick?: (enabled: 
         setCheckoutButtonsUI(buttons);
       }
     })();
-  }, [cart, redoCoverageClient.eligible, redoCoverageClient.price, redoCoverageClient.storeId]);
+  }, [
+    getCartEligibilityPriceKey(cart),
+    redoCoverageClient.eligible,
+    redoCoverageClient.price,
+    redoCoverageClient.storeId,
+  ]);
 
   /** To avoid the inevitable spammers trying to checkout faster by clicking over and over, between the time the promise resolves and the new tab opens (or errors) */
   const DELAY_TO_ALLOW_CLICKING_AGAIN = 2000;
