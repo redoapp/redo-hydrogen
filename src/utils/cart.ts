@@ -32,6 +32,30 @@ const isOptimisticCart = (cart: CartReturn | CartWithActionsDocs | OptimisticCar
   return "isOptimistic" in cart && (cart.isOptimistic ?? false);
 };
 
+// Build a stable key from non-Redo cart lines so effects can detect changes that
+// affect coverage eligibility/price even when the cart object is mutated in place.
+// Excludes Redo items so toggling coverage doesn't cause us to re-evaluate.
+const getCartEligibilityPriceKey = (cart: CartReturn | CartWithActionsDocs | OptimisticCart | undefined): string => {
+  if (!cart) {
+    return "";
+  }
+
+  return getCartLines(cart)
+    .filter((cartLine) => cartLine.merchandise?.product?.vendor !== "re:do")
+    .map((cartLine) =>
+      [
+        cartLine.id,
+        cartLine.merchandise?.id,
+        cartLine.quantity,
+        cartLine.merchandise?.price?.amount,
+        cartLine.merchandise?.price?.currencyCode,
+        cartLine.cost?.totalAmount?.amount,
+        cartLine.cost?.totalAmount?.currencyCode,
+      ].join(":"),
+    )
+    .join("|");
+};
+
 const addProductToCartIfNeeded = async ({
   cart,
   fetcher,
@@ -347,5 +371,6 @@ export {
   useWaitCartIdle,
   isCartWithActionsDocs,
   getCartLines,
+  getCartEligibilityPriceKey,
   isOptimisticCart,
 };
