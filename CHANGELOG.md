@@ -1,10 +1,20 @@
-## 2.0.0
+## 2.x
+
+### 2.0.1
+
+- Get new coverage quote if cart lines mutated in-place without changing cart object
+
+### 2.0.0
 
 - **Breaking:** migrate from Remix to React Router 7 (requires `@shopify/hydrogen` >=2025.7.0)
 - Update all peer dependencies for Hydrogen 2025.7+ compatibility
 - Themes still using Remix should use the [1.x releases](https://github.com/redoapp/redo-hydrogen/tree/release/1.4)
 
 ## 1.x
+
+### 1.4.8
+
+- Get new coverage quote if cart lines mutated in-place without changing cart object
 
 ### 1.4.7
 
